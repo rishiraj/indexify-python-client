@@ -1,6 +1,5 @@
 from indexify.client import IndexifyClient, Document
 import time
-from uuid import uuid4
 import os
 import unittest
 
@@ -24,13 +23,13 @@ class TestIntegrationTest(unittest.TestCase):
         assert client.namespace == namespace
 
     def test_create_namespace(self):
-        namespace_name = str(uuid4())
+        namespace_name = "test.createnamespace"
         client = IndexifyClient.create_namespace(namespace_name)
         assert client.namespace == namespace_name
 
     def test_add_documents(self):
         # Add single documents
-        namespace_name = str(uuid4())
+        namespace_name = "test.adddocuments"
         client = IndexifyClient.create_namespace(namespace_name)
 
         client.add_documents(
@@ -64,7 +63,7 @@ class TestIntegrationTest(unittest.TestCase):
         client.add_documents(["string", Document("document string", {})])
 
     def test_get_content(self):
-        namespace_name = str(uuid4())
+        namespace_name = "test.getcontent"
         client = IndexifyClient.create_namespace(namespace=namespace_name)
         client.add_documents(
             [Document(text="one", labels={"l1": "test"}), "two", "three"]
@@ -81,8 +80,8 @@ class TestIntegrationTest(unittest.TestCase):
         assert len(content) == 1
 
     def test_search(self):
-        namespace_name = str(uuid4())
-        extractor_name = str(uuid4())
+        namespace_name = "test.search"
+        extractor_name = "minilml6_test_search"
 
         client = IndexifyClient.create_namespace(namespace_name)
         url = "https://memory-alpha.fandom.com"
@@ -110,8 +109,8 @@ class TestIntegrationTest(unittest.TestCase):
         assert len(extractors) >= 1
 
     def test_bind_extractor(self):
-        name = str(uuid4())
-        namespace_name = "binding-test-repository"
+        name = "minilml6_test_bind_extractor"
+        namespace_name = "test.bindextractor"
         client = IndexifyClient.create_namespace(namespace_name)
         client.bind_extractor(
             "tensorlake/minilm-l6",
@@ -119,12 +118,12 @@ class TestIntegrationTest(unittest.TestCase):
         )
 
     def test_query_metadata(self):
-        namespace_name = str(uuid4())
-        extractor_name = str(uuid4())
+        namespace_name = "test.querymetadata"
+        name = "minilml6_test_query_metadata"
         client = IndexifyClient.create_namespace(namespace_name)
         client.bind_extractor(
             "tensorlake/minilm-l6",
-            extractor_name,
+            name,
         )
 
         for index in client.indexes():
@@ -133,9 +132,8 @@ class TestIntegrationTest(unittest.TestCase):
             # TODO: validate response - currently broken
 
     def test_extractor_input_params(self):
-        name = str(uuid4())
-        namespace_name = "binding-test-repository"
-        client = IndexifyClient.create_namespace(namespace=namespace_name)
+        name = "minilml6_test_extractor_input_params"
+        client = IndexifyClient.create_namespace(namespace="test.extractorinputparams")
         client.bind_extractor(
             extractor="tensorlake/minilm-l6",
             name=name,
@@ -147,8 +145,8 @@ class TestIntegrationTest(unittest.TestCase):
         )
 
     def test_get_bindings(self):
-        name = str(uuid4())
-        client = IndexifyClient.create_namespace("binding-test-repository")
+        name = "minilml6_test_get_bindings"
+        client = IndexifyClient.create_namespace("test.getbindings")
         client.bind_extractor(
             "tensorlake/minilm-l6",
             name,
@@ -157,8 +155,8 @@ class TestIntegrationTest(unittest.TestCase):
         assert len(list(filter(lambda x: x.name.startswith(name), bindings))) == 1
 
     def test_get_indexes(self):
-        name = str(uuid4())
-        client = IndexifyClient.create_namespace("binding-test-repository")
+        name = "minilml6_test_get_indexes"
+        client = IndexifyClient.create_namespace("test.getindexes")
         client.bind_extractor(
             "tensorlake/minilm-l6",
             name,

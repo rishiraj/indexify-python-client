@@ -1,7 +1,7 @@
 from indexify.client import IndexifyClient, Document
 import time
 from uuid import uuid4
-
+import os
 import unittest
 
 
@@ -166,13 +166,9 @@ class TestIntegrationTest(unittest.TestCase):
         indexes = client.indexes()
         assert len(list(filter(lambda x: x.get("name").startswith(name), indexes))) == 1
 
-    def upload_file(self, path: str):
-        with open(path, "rb") as f:
-            response = self.post(
-                f"repositories/{self.namespace}/upload_file",
-                files={"file": f},
-            )
-            response.raise_for_status()
+    def test_upload_file(self):
+        test_file_path = os.path.join(os.path.dirname(__file__), "files", "test.txt")
+        self.client.upload_file(test_file_path)
 
 
 if __name__ == "__main__":

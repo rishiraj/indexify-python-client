@@ -191,7 +191,7 @@ class IndexifyClient:
         namespace: str,
         extractor_bindings: list = [],
         labels: dict = {},
-    ):
+    ) -> "IndexifyClient":
         """
         Create a new namespace.
         Returns a new client with that namespace
@@ -244,7 +244,7 @@ class IndexifyClient:
         input_params: dict = {},
         filters: dict = {},
     ) -> dict:
-        """Bind an extractor to this repository
+        """Bind an extractor
 
         Args:
             - extractor (str): Name of the extractor
@@ -348,3 +348,11 @@ class IndexifyClient:
         )
         response.raise_for_status()
         return response.json()["results"]
+
+    def upload_file(self, path: str):
+        with open(path, "rb") as f:
+            response = self.post(
+                f"repositories/{self.namespace}/upload_file",
+                files={"file": f},
+            )
+            response.raise_for_status()

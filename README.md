@@ -17,6 +17,13 @@ Look at the [examples](examples) directory for more examples.
 
 ## Development
 
+To install the client from this repository for development:
+
+```shell
+cd "path to this repository"
+pip install -e .
+```
+
 Install and run the `poetry` package manager:
 
 ```shell
@@ -27,12 +34,6 @@ poetry install
 More information at [https://python-poetry.org/docs/](https://python-poetry.org/docs/).
 
 
-### Install locally
-Install the indexify python sdk locally for development
-
-```shell
-pip install -e .
-```
 
 ### Environment Variables
 

@@ -194,7 +194,9 @@ class IndexifyClient:
     ) -> "IndexifyClient":
         """
         Create a new namespace.
-        Returns a new client with that namespace
+
+        Returns:
+            IndexifyClient: a new client with the given namespace
         """
         bindings = []
         for bd in extractor_bindings:
@@ -213,6 +215,12 @@ class IndexifyClient:
         return client
 
     def indexes(self) -> List[Index]:
+        """
+        Get the indexes of the current namespace.
+
+        Returns:
+            List[Index]: list of indexes in the current namespace
+        """
         response = self.get(f"namespaces/{self.namespace}/indexes")
         response.raise_for_status()
         return response.json()["indexes"]
@@ -220,6 +228,9 @@ class IndexifyClient:
     def extractors(self) -> List[Extractor]:
         """
         Get a list of all extractors.
+
+        Returns:
+            List[Extractor]: list of extractors
         """
         response = self.get(f"extractors")
         extractors_dict = response.json()["extractors"]
@@ -229,6 +240,9 @@ class IndexifyClient:
         return extractors
 
     def get_extractor_bindings(self):
+        """
+        Retrieve and update the list of extractor bindings for the current namespace.
+        """
         response = self.get(f"namespaces/{self.namespace}")
         response.raise_for_status()
 
@@ -244,7 +258,7 @@ class IndexifyClient:
         input_params: dict = {},
         labels_eq: str = None,
     ) -> dict:
-        """Bind an extractor
+        """Bind an extractor.
 
         Args:
             - extractor (str): Name of the extractor
@@ -291,6 +305,13 @@ class IndexifyClient:
         parent_id: str = None,
         labels_eq: str = None,
     ):
+        """
+        Get list of content from current namespace.
+
+        Args:
+            - parent_id (str): Optional filter for parent id
+            - labels_eq (str): Optional filter for labels
+        """
         params = {}
         if parent_id:
             params.update({"parent_id": parent_id})
@@ -304,6 +325,12 @@ class IndexifyClient:
     def add_documents(
         self, documents: Union[Document, str, List[Union[Document, str]]]
     ) -> None:
+        """
+        Add documents to current namespace.
+
+        Args:
+            - documents (Union[Document, str, List[Union[Document, str]]]): this can be a list of strings, list of Documents or a mix of both
+        """
         if isinstance(documents, Document):
             documents = [documents]
         elif isinstance(documents, str):
@@ -334,12 +361,27 @@ class IndexifyClient:
         response.raise_for_status()
 
     def query_metadata(self, index_name: str, content_id: str) -> dict:
+        """
+        Query metadata for a specific content ID in a given index.
+
+        Args:
+            - index_name (str): index to query
+            - content_id (str): content id to query
+        """
         params = {"index": index_name, "content_id": content_id}
         response = self.get(f"namespaces/{self.namespace}/metadata", params=params)
         response.raise_for_status()
         return response.json()["attributes"]
 
     def search_index(self, name: str, query: str, top_k: int) -> list[TextChunk]:
+        """
+        Search index in the current namespace.
+
+        Args:
+            - name (str): name of index to search
+            - query (str): query string
+            - top_k (int): top k nearest neighbors to be returned
+        """
         req = {"index": name, "query": query, "k": top_k}
         response = self.post(
             f"namespaces/{self.namespace}/search",
@@ -350,6 +392,12 @@ class IndexifyClient:
         return response.json()["results"]
 
     def upload_file(self, path: str):
+        """
+        Upload a file.
+
+        Args:
+            - path (str): relative path to the file to be uploaded
+        """
         with open(path, "rb") as f:
             response = self.post(
                 f"namespaces/{self.namespace}/upload_file",

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from typing import Optional
 
 
 @dataclass
@@ -6,8 +7,8 @@ class ExtractorBinding:
     extractor: str
     name: str
     content_source: str
-    filters_eq: dict
     input_params: dict
+    labels_eq: Optional[str] = None
 
     def __repr__(self) -> str:
         return f"ExtractorBinding(name={self.name} extractor={self.extractor})"
@@ -16,8 +17,11 @@ class ExtractorBinding:
         return self.__repr__()
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        filtered_dict = {k: v for k, v in asdict(self).items() if v is not None}
+        return filtered_dict
 
     @classmethod
     def from_dict(cls, json: dict):
+        if "filters_eq" in json:
+            json["labels_eq"] = json.pop("filters_eq")
         return ExtractorBinding(**json)

@@ -1,4 +1,4 @@
-from indexify.client import IndexifyClient, Document
+from indexify.client import IndexifyClient, Document, ExtractorBinding
 import time
 import os
 import unittest
@@ -24,7 +24,17 @@ class TestIntegrationTest(unittest.TestCase):
 
     def test_create_namespace(self):
         namespace_name = "test.createnamespace"
-        client = IndexifyClient.create_namespace(namespace_name)
+
+        minilm_binding = ExtractorBinding(
+            extractor="tensorlake/minilm-l6",
+            name="minilm-l6",
+            content_source="source",
+            input_params={},
+        )
+
+        client = IndexifyClient.create_namespace(
+            namespace_name, extractor_bindings=[minilm_binding]
+        )
         assert client.namespace == namespace_name
 
     def test_add_documents(self):
@@ -80,23 +90,23 @@ class TestIntegrationTest(unittest.TestCase):
         assert len(content) == 1
 
     def test_search(self):
-        namespace_name = "test.search"
+        namespace_name = "test.search2"
         extractor_name = "minilml6_test_search"
 
         client = IndexifyClient.create_namespace(namespace_name)
-        url = "https://memory-alpha.fandom.com"
+        source = "test"
 
         client.bind_extractor(
             extractor="tensorlake/minilm-l6",
             name=extractor_name,
-            filters={"source": url},
+            labels_eq=f"source:{source}",
         )
 
         client.add_documents(
             [
                 Document(
                     text="Indexify is also a retrieval service for LLM agents!",
-                    labels={"url": url},
+                    labels={"source": source},
                 )
             ]
         )
@@ -121,6 +131,8 @@ class TestIntegrationTest(unittest.TestCase):
         namespace_name = "test.querymetadata"
         name = "minilml6_test_query_metadata"
         client = IndexifyClient.create_namespace(namespace_name)
+        client.add_documents("test")
+        content_id = client.get_content()[0]["id"]
         client.bind_extractor(
             "tensorlake/minilm-l6",
             name,
@@ -128,7 +140,7 @@ class TestIntegrationTest(unittest.TestCase):
 
         for index in client.indexes():
             index_name = index.get("name")
-            client.query_metadata(index_name)
+            client.query_metadata(index_name, content_id)
             # TODO: validate response - currently broken
 
     def test_extractor_input_params(self):

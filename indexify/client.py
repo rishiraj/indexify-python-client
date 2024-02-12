@@ -47,11 +47,11 @@ class IndexifyClient:
         self._client = httpx.Client(*args, **kwargs)
 
         # get namespace data
-        response = self.get(f"repositories/{self.namespace}")
+        response = self.get(f"namespaces/{self.namespace}")
         response.raise_for_status()
         resp_json = response.json()
         # initialize extractor_bindings
-        for eb in resp_json["repository"]["extractor_bindings"]:
+        for eb in resp_json["namespace"]["extractor_bindings"]:
             self.extractor_bindings.append(ExtractorBinding.from_dict(eb))
 
     @classmethod
@@ -121,7 +121,7 @@ class IndexifyClient:
         from indexify import IndexifyClient
 
         client = IndexifyClient()
-        response = client.get("repositories")
+        response = client.get("namespaces")
         print(response.json())
         ```
         """
@@ -139,7 +139,7 @@ class IndexifyClient:
         from indexify import IndexifyClient
 
         client = IndexifyClient()
-        response = client.post("repositories", json={"name": "my-repo"})
+        response = client.post("namespaces", json={"name": "my-repo"})
         print(response.json())
         ```
         """
@@ -176,14 +176,14 @@ class IndexifyClient:
 
     def namespaces(self) -> list[str]:
         """
-        Get a list of all repositories.
+        Get a list of all namespaces.
         """
-        response = self.get(f"repositories")
-        repositories_dict = response.json()["repositories"]
-        repositories = []
-        for item in repositories_dict:
-            repositories.append(item["name"])
-        return repositories
+        response = self.get(f"namespaces")
+        namespaces_dict = response.json()["namespaces"]
+        namespaces = []
+        for item in namespaces_dict:
+            namespaces.append(item["name"])
+        return namespaces
 
     @classmethod
     def create_namespace(
@@ -194,32 +194,43 @@ class IndexifyClient:
     ) -> "IndexifyClient":
         """
         Create a new namespace.
-        Returns a new client with that namespace
+
+        Returns:
+            IndexifyClient: a new client with the given namespace
         """
         bindings = []
         for bd in extractor_bindings:
             if isinstance(bd, ExtractorBinding):
-                bindings.append(bd.asdict())
+                bindings.append(bd.to_dict())
             else:
                 bindings.append(bd)
         req = {
             "name": namespace,
-            "extractor_bindings": extractor_bindings,
+            "extractor_bindings": bindings,
             "labels": labels,
         }
 
         client = IndexifyClient(namespace=namespace)
-        client.post(f"repositories", json=req)
+        client.post(f"namespaces", json=req)
         return client
 
     def indexes(self) -> List[Index]:
-        response = self.get(f"repositories/{self.namespace}/indexes")
+        """
+        Get the indexes of the current namespace.
+
+        Returns:
+            List[Index]: list of indexes in the current namespace
+        """
+        response = self.get(f"namespaces/{self.namespace}/indexes")
         response.raise_for_status()
         return response.json()["indexes"]
 
     def extractors(self) -> List[Extractor]:
         """
         Get a list of all extractors.
+
+        Returns:
+            List[Extractor]: list of extractors
         """
         response = self.get(f"extractors")
         extractors_dict = response.json()["extractors"]
@@ -229,11 +240,14 @@ class IndexifyClient:
         return extractors
 
     def get_extractor_bindings(self):
-        response = self.get(f"repositories/{self.namespace}")
+        """
+        Retrieve and update the list of extractor bindings for the current namespace.
+        """
+        response = self.get(f"namespaces/{self.namespace}")
         response.raise_for_status()
 
         self.extractor_bindings = []
-        for eb in response.json()["repository"]["extractor_bindings"]:
+        for eb in response.json()["namespace"]["extractor_bindings"]:
             self.extractor_bindings.append(ExtractorBinding.from_dict(eb))
         return self.extractor_bindings
 
@@ -242,9 +256,9 @@ class IndexifyClient:
         extractor: str,
         name: str,
         input_params: dict = {},
-        filters: dict = {},
+        labels_eq: str = None,
     ) -> dict:
-        """Bind an extractor
+        """Bind an extractor.
 
         Args:
             - extractor (str): Name of the extractor
@@ -265,12 +279,14 @@ class IndexifyClient:
             "extractor": extractor,
             "name": name,
             "input_params": input_params,
-            "filters": filters,
+            "filters_eq": labels_eq,
         }
+        if req["filters_eq"] == None:
+            del req["filters_eq"]
 
         request_body = json.dumps(req, default=json_set_default)
         response = self.post(
-            f"repositories/{self.namespace}/extractor_bindings",
+            f"namespaces/{self.namespace}/extractor_bindings",
             data=request_body,
             headers={"Content-Type": "application/json"},
         )
@@ -289,19 +305,32 @@ class IndexifyClient:
         parent_id: str = None,
         labels_eq: str = None,
     ):
+        """
+        Get list of content from current namespace.
+
+        Args:
+            - parent_id (str): Optional filter for parent id
+            - labels_eq (str): Optional filter for labels
+        """
         params = {}
         if parent_id:
             params.update({"parent_id": parent_id})
         if labels_eq:
             params.update({"labels_eq": labels_eq})
 
-        response = self.get(f"repositories/{self.namespace}/content", params=params)
+        response = self.get(f"namespaces/{self.namespace}/content", params=params)
         response.raise_for_status()
         return response.json()["content_list"]
 
     def add_documents(
         self, documents: Union[Document, str, List[Union[Document, str]]]
     ) -> None:
+        """
+        Add documents to current namespace.
+
+        Args:
+            - documents (Union[Document, str, List[Union[Document, str]]]): this can be a list of strings, list of Documents or a mix of both
+        """
         if isinstance(documents, Document):
             documents = [documents]
         elif isinstance(documents, str):
@@ -325,24 +354,37 @@ class IndexifyClient:
 
         req = {"documents": documents}
         response = self.post(
-            f"repositories/{self.namespace}/add_texts",
+            f"namespaces/{self.namespace}/add_texts",
             json=req,
             headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
 
-    def query_metadata(self, index_name: str, content_id: str = None) -> dict:
-        params = {"index": index_name}
-        if content_id:
-            params.update({"content_id": content_id})
-        response = self.get(f"repositories/{self.namespace}/metadata", params=params)
+    def query_metadata(self, index_name: str, content_id: str) -> dict:
+        """
+        Query metadata for a specific content ID in a given index.
+
+        Args:
+            - index_name (str): index to query
+            - content_id (str): content id to query
+        """
+        params = {"index": index_name, "content_id": content_id}
+        response = self.get(f"namespaces/{self.namespace}/metadata", params=params)
         response.raise_for_status()
         return response.json()["attributes"]
 
     def search_index(self, name: str, query: str, top_k: int) -> list[TextChunk]:
+        """
+        Search index in the current namespace.
+
+        Args:
+            - name (str): name of index to search
+            - query (str): query string
+            - top_k (int): top k nearest neighbors to be returned
+        """
         req = {"index": name, "query": query, "k": top_k}
         response = self.post(
-            f"repositories/{self.namespace}/search",
+            f"namespaces/{self.namespace}/search",
             json=req,
             headers={"Content-Type": "application/json"},
         )
@@ -350,9 +392,15 @@ class IndexifyClient:
         return response.json()["results"]
 
     def upload_file(self, path: str):
+        """
+        Upload a file.
+
+        Args:
+            - path (str): relative path to the file to be uploaded
+        """
         with open(path, "rb") as f:
             response = self.post(
-                f"repositories/{self.namespace}/upload_file",
+                f"namespaces/{self.namespace}/upload_file",
                 files={"file": f},
             )
             response.raise_for_status()

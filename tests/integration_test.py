@@ -99,7 +99,7 @@ class TestIntegrationTest(unittest.TestCase):
         client.bind_extractor(
             extractor="tensorlake/minilm-l6",
             name=extractor_name,
-            labels_eq=f"source:test",
+            labels_eq=f"source:{source}",
         )
 
         client.add_documents(

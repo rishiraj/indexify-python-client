@@ -2,9 +2,12 @@ from indexify.client import IndexifyClient, Document, ExtractorBinding
 import time
 import os
 import unittest
-
+import uuid
 
 class TestIntegrationTest(unittest.TestCase):
+    """
+    Must have wikipedia and minilml6 extractors running
+    """
     def __init__(self, *args, **kwargs):
         super(TestIntegrationTest, self).__init__(*args, **kwargs)
 
@@ -128,20 +131,29 @@ class TestIntegrationTest(unittest.TestCase):
         )
 
     def test_query_metadata(self):
-        namespace_name = "test.querymetadata"
-        name = "minilml6_test_query_metadata"
+        """
+        need to add a new extractor which produce the metadata index
+        wikipedia extractor would be that, would have metadata index
+        use same way
+        """
+        
+        namespace_name = str(uuid.uuid4())
+        binding_name = str(uuid.uuid4())
         client = IndexifyClient.create_namespace(namespace_name)
-        client.add_documents("test")
-        content_id = client.get_content()[0]["id"]
+        time.sleep(2)
         client.bind_extractor(
-            "tensorlake/minilm-l6",
-            name,
+            "tensorlake/wikipedia",
+            binding_name,
         )
-
-        for index in client.indexes():
-            index_name = index.get("name")
-            client.query_metadata(index_name, content_id)
-            # TODO: validate response - currently broken
+        
+        client.upload_file(os.path.join(os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"))
+        time.sleep(10)
+        content = client.get_content()
+        content = list(filter(lambda x: x.get('source') != "ingestion", content))
+        assert len(content) > 0
+        for c in content:
+            metadata = client.query_metadata(f"{binding_name}.metadata", c.get('id'))
+            assert len(metadata) > 0
 
     def test_extractor_input_params(self):
         name = "minilml6_test_extractor_input_params"

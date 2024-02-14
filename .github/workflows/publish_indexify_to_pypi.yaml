@@ -19,7 +19,7 @@ jobs:
       - name: Install Poetry
         run: python3 -m pip install poetry --user
       - name: Build Packages
-        run: python3 -m poetry build && python3 -m poetry build --directory=langchain
+        run: python3 -m poetry build && cd langchain && python3 -m poetry build
       - name: Publish Indexify Client to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

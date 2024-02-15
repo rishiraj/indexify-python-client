@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo RUNNER_TEMP $RUNNER_TEMP
+
 docker-compose up -d
 
 serverReady=false

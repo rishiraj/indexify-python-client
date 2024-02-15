@@ -19,4 +19,6 @@ jobs:
     - name: Install python dependencies
       run: pip install pytest indexify indexify_langchain langchain_openai langchain
     - name: Run Tests
+      env:
+        OPEN_API_KEY: ${{ secrets.OPEN_API_KEY }}
       run: cd tests && ./run_tests.sh

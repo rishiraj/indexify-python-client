@@ -257,6 +257,7 @@ class IndexifyClient:
         name: str,
         input_params: dict = {},
         labels_eq: str = None,
+        content_source="ingestion",
     ) -> dict:
         """Bind an extractor.
 
@@ -280,6 +281,7 @@ class IndexifyClient:
             "name": name,
             "input_params": input_params,
             "filters_eq": labels_eq,
+            "content_source": content_source,
         }
         if req["filters_eq"] == None:
             del req["filters_eq"]

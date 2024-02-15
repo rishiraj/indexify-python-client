@@ -243,3 +243,6 @@ class TestIntegrationTest(unittest.TestCase):
         query = "Where is Lucas from?"
         assert "Atlanta" in rag_chain.invoke(query)
 
+
+if __name__ == "__main__":
+    unittest.main()

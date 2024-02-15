@@ -21,7 +21,7 @@ services:
       server:
         ipv4_address: 172.21.0.2
     volumes:
-      - data:/tmp/indexify-blob-storage
+      - data:${RUNNER_TEMP:-/tmp}/indexify-blob-storage
   postgres:
     image: ankane/pgvector
     restart: always
@@ -40,7 +40,7 @@ services:
       server:
         ipv4_address: 172.21.0.9
     volumes:
-      - data:/tmp/indexify-blob-storage
+      - data:${RUNNER_TEMP:-/tmp}/indexify-blob-storage
   wikiepdia-extractor:
     image: tensorlake/wikipedia
     command: ["join", "--coordinator", "172.21.0.2:8950", "--ingestion-addr", "172.21.0.2:8900"]
@@ -48,7 +48,7 @@ services:
       server:
         ipv4_address: 172.21.0.10
     volumes:
-      - data:/tmp/indexify-blob-storage
+      - data:${RUNNER_TEMP:-/tmp}/indexify-blob-storage
 
 volumes:
   data:

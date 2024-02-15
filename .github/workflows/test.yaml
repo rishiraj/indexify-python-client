@@ -20,5 +20,5 @@ jobs:
       run: pip install pytest indexify indexify_langchain langchain_openai langchain
     - name: Run Tests
       env:
-        OPEN_API_KEY: ${{ secrets.OPEN_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: cd tests && ./run_tests.sh

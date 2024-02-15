@@ -97,7 +97,7 @@ class TestIntegrationTest(unittest.TestCase):
 
     def test_search(self):
         namespace_name = "test.search2"
-        extractor_name = "minilml6_test_search"
+        extractor_name = self.generate_short_id()
 
         client = IndexifyClient.create_namespace(namespace_name)
         source = "test"

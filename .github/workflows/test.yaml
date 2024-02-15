@@ -17,6 +17,6 @@ jobs:
       with:
         python-version: 3.11
     - name: Install pytest
-      run: pip install pytest
+      run: pip install pytest indexify indexify_langchain
     - name: Run Tests
       run: cd tests && ./run_tests.sh

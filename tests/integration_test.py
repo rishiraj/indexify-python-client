@@ -1,5 +1,4 @@
 from indexify.client import IndexifyClient, Document, ExtractorBinding
-from langchain.text_splitter import CharacterTextSplitter
 import time
 import os
 import unittest

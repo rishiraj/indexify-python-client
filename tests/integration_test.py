@@ -153,7 +153,6 @@ class TestIntegrationTest(unittest.TestCase):
         client.upload_file(os.path.join(os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"))
         time.sleep(25)
         content = client.get_content()
-        print(f"Original content len: {len(content)}")
         content = list(filter(lambda x: x.get('source') != "ingestion", content))
         assert len(content) > 0
         for c in content:

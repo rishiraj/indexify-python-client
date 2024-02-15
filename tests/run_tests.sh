@@ -40,6 +40,10 @@ curl -v -X POST http://localhost:8900/namespaces/test.search/extractor_bindings 
 
 # search
 sleep 5
+
+echo print logs
+docker-compose logs
+
 curl -v -X POST http://localhost:8900/namespaces/test.search/search \
 -H "Content-Type: application/json" \
 -d '{ 
@@ -47,6 +51,10 @@ curl -v -X POST http://localhost:8900/namespaces/test.search/search \
 	"query": "test", 
 	"k": 3
 }'
+
+
+echo print logs again
+docker-compose logs
 
 docker-compose down
 

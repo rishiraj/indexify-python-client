@@ -16,54 +16,51 @@ done
 
 
 
-# curl tests
+# # curl tests
 
-# create namespace
-curl -v -X POST http://localhost:8900/namespaces -H "Content-Type: application/json" -d '
-{
-	"name": "test.search",
-	"extractor_bindings":[],
-	"labels":{}
-}'
+# # create namespace
+# curl -v -X POST http://localhost:8900/namespaces -H "Content-Type: application/json" -d '
+# {
+# 	"name": "test.search",
+# 	"extractor_bindings":[],
+# 	"labels":{}
+# }'
 
-# add text
-curl -v -X POST http://localhost:8900/namespaces/test.search/add_texts \
--H "Content-Type: application/json" \
--d '{"documents": [
-        {"text": "This is a test", "labels":{"source":"test"}}
-    ]}'
+# # add text
+# curl -v -X POST http://localhost:8900/namespaces/test.search/add_texts \
+# -H "Content-Type: application/json" \
+# -d '{"documents": [
+#         {"text": "This is a test", "labels":{"source":"test"}}
+#     ]}'
 
-# bind extractor
-curl -v -X POST http://localhost:8900/namespaces/test.search/extractor_bindings \
--H "Content-Type: application/json" \
--d '{"extractor": "tensorlake/minilm-l6", "name": "minilml6", "input_params":{}, "filters_eq": "source:test" }'
+# # bind extractor
+# curl -v -X POST http://localhost:8900/namespaces/test.search/extractor_bindings \
+# -H "Content-Type: application/json" \
+# -d '{"extractor": "tensorlake/minilm-l6", "name": "minilml6", "input_params":{}, "filters_eq": "source:test" }'
 
-# search
-sleep 5
+# # search
+# sleep 5
 
-echo print logs
-docker-compose logs
-
-curl -v -X POST http://localhost:8900/namespaces/test.search/search \
--H "Content-Type: application/json" \
--d '{ 
-	"index": "minilml6.embedding", 
-	"query": "test", 
-	"k": 3
-}'
+# curl -v -X POST http://localhost:8900/namespaces/test.search/search \
+# -H "Content-Type: application/json" \
+# -d '{ 
+# 	"index": "minilml6.embedding", 
+# 	"query": "test", 
+# 	"k": 3
+# }'
 
 
-echo print logs again
-docker-compose logs
-
-docker-compose down
-
-
-
-
-# pytest integration_test.py::TestIntegrationTest
-# pytest_exit_status=$?
+# echo print logs
+# docker-compose logs
 
 # docker-compose down
 
-# exit $pytest_exit_status
+
+
+
+pytest integration_test.py::TestIntegrationTest
+pytest_exit_status=$?
+
+docker-compose down
+
+exit $pytest_exit_status

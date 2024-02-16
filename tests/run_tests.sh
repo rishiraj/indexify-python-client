@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo RUNNER_TEMP $RUNNER_TEMP
-
 docker-compose up -d
 
 serverReady=false
@@ -62,6 +60,8 @@ done
 
 pytest integration_test.py::TestIntegrationTest
 pytest_exit_status=$?
+
+docker-compose logs
 
 docker-compose down
 

@@ -1,5 +1,4 @@
 from indexify.client import IndexifyClient, Document, ExtractorBinding
-from langchain.text_splitter import CharacterTextSplitter
 import time
 import os
 import unittest
@@ -15,6 +14,9 @@ class TestIntegrationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client = IndexifyClient()
+
+    def generate_short_id(self,size:int = 4) -> str:
+        return uuid.uuid4().__str__().replace("-","")[:size]
 
     def test_list_namespaces(self):
         client = IndexifyClient()
@@ -95,7 +97,7 @@ class TestIntegrationTest(unittest.TestCase):
 
     def test_search(self):
         namespace_name = "test.search2"
-        extractor_name = "minilml6_test_search"
+        extractor_name = self.generate_short_id()
 
         client = IndexifyClient.create_namespace(namespace_name)
         source = "test"
@@ -138,17 +140,18 @@ class TestIntegrationTest(unittest.TestCase):
         use same way
         """
         
-        namespace_name = str(uuid.uuid4())
-        binding_name = str(uuid.uuid4())
+        namespace_name = "metadatatest"
+        binding_name = self.generate_short_id()
         client = IndexifyClient.create_namespace(namespace_name)
         time.sleep(2)
         client.bind_extractor(
             "tensorlake/wikipedia",
             binding_name,
         )
-        
+
+        time.sleep(5)
         client.upload_file(os.path.join(os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"))
-        time.sleep(10)
+        time.sleep(25)
         content = client.get_content()
         content = list(filter(lambda x: x.get('source') != "ingestion", content))
         assert len(content) > 0

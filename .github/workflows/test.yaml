@@ -1,0 +1,24 @@
+name: Tests
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+      branches:
+      - 'main'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+    - name: Install python dependencies
+      run: pip install pytest indexify indexify_langchain langchain_openai langchain
+    - name: Run Tests
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: cd tests && ./run_tests.sh

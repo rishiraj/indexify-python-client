@@ -3,7 +3,7 @@ import json
 from collections import namedtuple
 from .settings import DEFAULT_SERVICE_URL
 from .extractor import Extractor
-from .extractor_binding import ExtractorBinding
+from .extraction_policy import ExtractionPolicy
 from .index import Index
 from .utils import json_set_default
 from .data_containers import TextChunk
@@ -41,7 +41,7 @@ class IndexifyClient:
         **kwargs,
     ):
         self.namespace: str = namespace
-        self.extractor_bindings: List[ExtractorBinding] = []
+        self.extraction_policies: List[ExtractionPolicy] = []
         self.labels: dict = {}
         self._service_url = service_url
         self._client = httpx.Client(*args, **kwargs)
@@ -51,8 +51,8 @@ class IndexifyClient:
         response.raise_for_status()
         resp_json = response.json()
         # initialize extractor_bindings
-        for eb in resp_json["namespace"]["extractor_bindings"]:
-            self.extractor_bindings.append(ExtractorBinding.from_dict(eb))
+        for eb in resp_json["namespace"]["extraction_policies"]:
+            self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
 
     @classmethod
     def with_mtls(
@@ -189,7 +189,7 @@ class IndexifyClient:
     def create_namespace(
         self,
         namespace: str,
-        extractor_bindings: list = [],
+        extraction_policies: list = [],
         labels: dict = {},
     ) -> "IndexifyClient":
         """
@@ -198,15 +198,15 @@ class IndexifyClient:
         Returns:
             IndexifyClient: a new client with the given namespace
         """
-        bindings = []
-        for bd in extractor_bindings:
-            if isinstance(bd, ExtractorBinding):
-                bindings.append(bd.to_dict())
+        extraction_policies = []
+        for bd in extraction_policies:
+            if isinstance(bd, ExtractionPolicy):
+                extraction_policies.append(bd.to_dict())
             else:
-                bindings.append(bd)
+                extraction_policies.append(bd)
         req = {
             "name": namespace,
-            "extractor_bindings": bindings,
+            "extraction_policies": extraction_policies,
             "labels": labels,
         }
 
@@ -239,19 +239,19 @@ class IndexifyClient:
             extractors.append(Extractor.from_dict(ed))
         return extractors
 
-    def get_extractor_bindings(self):
+    def get_extraction_policies(self):
         """
-        Retrieve and update the list of extractor bindings for the current namespace.
+        Retrieve and update the list of extraction policies for the current namespace.
         """
         response = self.get(f"namespaces/{self.namespace}")
         response.raise_for_status()
 
-        self.extractor_bindings = []
-        for eb in response.json()["namespace"]["extractor_bindings"]:
-            self.extractor_bindings.append(ExtractorBinding.from_dict(eb))
-        return self.extractor_bindings
+        self.extraction_policies = []
+        for eb in response.json()["namespace"]["extraction_policies"]:
+            self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
+        return self.extraction_policies
 
-    def bind_extractor(
+    def add_extraction_policy(
         self,
         extractor: str,
         name: str,
@@ -259,7 +259,7 @@ class IndexifyClient:
         labels_eq: str = None,
         content_source="ingestion",
     ) -> dict:
-        """Bind an extractor.
+        """Add a new extraction policy.
 
         Args:
             - extractor (str): Name of the extractor
@@ -271,9 +271,9 @@ class IndexifyClient:
             dict: response payload
 
         Examples:
-            >>> repo.bind_extractor("EfficientNet", "efficientnet")
+            >>> repo.add_extraction_policy("EfficientNet", "efficientnet")
 
-            >>> repo.bind_extractor("MiniLML6", "minilm")
+            >>> repo.add_extraction_policy("MiniLML6", "minilm")
 
         """
         req = {
@@ -288,13 +288,13 @@ class IndexifyClient:
 
         request_body = json.dumps(req, default=json_set_default)
         response = self.post(
-            f"namespaces/{self.namespace}/extractor_bindings",
+            f"namespaces/{self.namespace}/extraction_policies",
             data=request_body,
             headers={"Content-Type": "application/json"},
         )
 
         # update self.extractor_bindings
-        self.get_extractor_bindings()
+        self.get_extraction_policies()
 
         try:
             response.raise_for_status()

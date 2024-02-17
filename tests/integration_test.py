@@ -1,13 +1,16 @@
-from indexify.client import IndexifyClient, Document, ExtractorBinding
+from indexify.client import IndexifyClient, Document
+from indexify import ExtractionPolicy
 import time
 import os
 import unittest
 import uuid
 
+
 class TestIntegrationTest(unittest.TestCase):
     """
     Must have wikipedia and minilml6 extractors running
     """
+
     def __init__(self, *args, **kwargs):
         super(TestIntegrationTest, self).__init__(*args, **kwargs)
 
@@ -15,8 +18,8 @@ class TestIntegrationTest(unittest.TestCase):
     def setUpClass(cls):
         cls.client = IndexifyClient()
 
-    def generate_short_id(self,size:int = 4) -> str:
-        return uuid.uuid4().__str__().replace("-","")[:size]
+    def generate_short_id(self, size: int = 4) -> str:
+        return uuid.uuid4().__str__().replace("-", "")[:size]
 
     def test_list_namespaces(self):
         client = IndexifyClient()
@@ -31,7 +34,7 @@ class TestIntegrationTest(unittest.TestCase):
     def test_create_namespace(self):
         namespace_name = "test.createnamespace"
 
-        minilm_binding = ExtractorBinding(
+        minilm_binding = ExtractionPolicy(
             extractor="tensorlake/minilm-l6",
             name="minilm-l6",
             content_source="source",
@@ -39,7 +42,7 @@ class TestIntegrationTest(unittest.TestCase):
         )
 
         client = IndexifyClient.create_namespace(
-            namespace_name, extractor_bindings=[minilm_binding]
+            namespace_name, extraction_policies=[minilm_binding]
         )
         assert client.namespace == namespace_name
 
@@ -102,7 +105,7 @@ class TestIntegrationTest(unittest.TestCase):
         client = IndexifyClient.create_namespace(namespace_name)
         source = "test"
 
-        client.bind_extractor(
+        client.add_extraction_policy(
             extractor="tensorlake/minilm-l6",
             name=extractor_name,
             labels_eq=f"source:{source}",
@@ -128,7 +131,7 @@ class TestIntegrationTest(unittest.TestCase):
         name = "minilml6_test_bind_extractor"
         namespace_name = "test.bindextractor"
         client = IndexifyClient.create_namespace(namespace_name)
-        client.bind_extractor(
+        client.add_extraction_policy(
             "tensorlake/minilm-l6",
             name,
         )
@@ -139,30 +142,34 @@ class TestIntegrationTest(unittest.TestCase):
         wikipedia extractor would be that, would have metadata index
         use same way
         """
-        
+
         namespace_name = "metadatatest"
         binding_name = self.generate_short_id()
         client = IndexifyClient.create_namespace(namespace_name)
         time.sleep(2)
-        client.bind_extractor(
+        client.add_extraction_policy(
             "tensorlake/wikipedia",
             binding_name,
         )
 
         time.sleep(5)
-        client.upload_file(os.path.join(os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"))
+        client.upload_file(
+            os.path.join(
+                os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"
+            )
+        )
         time.sleep(25)
         content = client.get_content()
-        content = list(filter(lambda x: x.get('source') != "ingestion", content))
+        content = list(filter(lambda x: x.get("source") != "ingestion", content))
         assert len(content) > 0
         for c in content:
-            metadata = client.query_metadata(f"{binding_name}.metadata", c.get('id'))
+            metadata = client.query_metadata(f"{binding_name}.metadata", c.get("id"))
             assert len(metadata) > 0
 
     def test_extractor_input_params(self):
         name = "minilml6_test_extractor_input_params"
         client = IndexifyClient.create_namespace(namespace="test.extractorinputparams")
-        client.bind_extractor(
+        client.add_extraction_policy(
             extractor="tensorlake/minilm-l6",
             name=name,
             input_params={
@@ -175,17 +182,17 @@ class TestIntegrationTest(unittest.TestCase):
     def test_get_bindings(self):
         name = "minilml6_test_get_bindings"
         client = IndexifyClient.create_namespace("test.getbindings")
-        client.bind_extractor(
+        client.add_extraction_policy(
             "tensorlake/minilm-l6",
             name,
         )
-        bindings = client.extractor_bindings
+        bindings = client.extraction_policies
         assert len(list(filter(lambda x: x.name.startswith(name), bindings))) == 1
 
     def test_get_indexes(self):
         name = "minilml6_test_get_indexes"
         client = IndexifyClient.create_namespace("test.getindexes")
-        client.bind_extractor(
+        client.add_extraction_policy(
             "tensorlake/minilm-l6",
             name,
         )
@@ -199,10 +206,10 @@ class TestIntegrationTest(unittest.TestCase):
     def test_langchain_retriever(self):
         # import langchain retriever
         from indexify_langchain import IndexifyRetriever
-        
+
         # init client
         client = IndexifyClient.create_namespace("test-langchain")
-        client.bind_extractor(
+        client.add_extraction_policy(
             "tensorlake/minilm-l6",
             "minilml6",
         )
@@ -241,7 +248,6 @@ class TestIntegrationTest(unittest.TestCase):
             | llm
             | StrOutputParser()
         )
-
 
         query = "Where is Lucas from?"
         assert "Atlanta" in rag_chain.invoke(query)

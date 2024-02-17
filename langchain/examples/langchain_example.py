@@ -30,7 +30,7 @@ client = IndexifyClient()
 
 
 # Bind openai embedding extractor
-client.bind_extractor(
+client.add_extraction_policy(
     "openai-embedding-ada-002-extractor",
     "openai",
     labels_eq="source:state_of_the_union",
@@ -40,7 +40,7 @@ client.bind_extractor(
 # Add Documents to repository
 import time
 
-docs = [Document(doc.page_content, {"source":"state_of_the_union"}) for doc in chunks]
+docs = [Document(doc.page_content, {"source": "state_of_the_union"}) for doc in chunks]
 client.add_documents(docs)
 time.sleep(10)
 

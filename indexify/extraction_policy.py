@@ -3,7 +3,7 @@ from typing import Optional
 
 
 @dataclass
-class ExtractorBinding:
+class ExtractionPolicy:
     extractor: str
     name: str
     content_source: str
@@ -11,7 +11,7 @@ class ExtractorBinding:
     labels_eq: Optional[str] = None
 
     def __repr__(self) -> str:
-        return f"ExtractorBinding(name={self.name} extractor={self.extractor})"
+        return f"ExtractionPolicy(name={self.name} extractor={self.extractor})"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -24,4 +24,4 @@ class ExtractorBinding:
     def from_dict(cls, json: dict):
         if "filters_eq" in json:
             json["labels_eq"] = json.pop("filters_eq")
-        return ExtractorBinding(**json)
+        return ExtractionPolicy(**json)

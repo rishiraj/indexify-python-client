@@ -56,7 +56,5 @@ class IndexifyRetriever(BaseRetriever):
 
         final_results = []
         for r in results:
-            final_results.append(
-                Document(page_content=r["text"], metadata=r["labels"])
-            )
+            final_results.append(Document(page_content=r["text"], metadata=r["labels"]))
         return final_results

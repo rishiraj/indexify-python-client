@@ -1,6 +1,6 @@
 import httpx
 
-from .data_containers import SearchChunk, TextChunk
+from .data_containers import TextChunk
 
 
 class Index:

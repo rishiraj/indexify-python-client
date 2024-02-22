@@ -50,7 +50,7 @@ class IndexifyClient:
         response = self.get(f"namespaces/{self.namespace}")
         response.raise_for_status()
         resp_json = response.json()
-        # initialize extractor_bindings
+        # initialize extraction_policies
         for eb in resp_json["namespace"]["extraction_policies"]:
             self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
 

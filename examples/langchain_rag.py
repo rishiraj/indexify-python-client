@@ -2,7 +2,7 @@ from indexify_langchain import IndexifyRetriever
 
 # init client
 client = IndexifyClient.create_namespace("test-langchain")
-client.bind_extractor(
+client.add_extraction_policy(
     "tensorlake/minilm-l6",
     "minilml6",
 )

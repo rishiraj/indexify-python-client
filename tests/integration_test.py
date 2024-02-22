@@ -127,8 +127,8 @@ class TestIntegrationTest(unittest.TestCase):
         extractors = self.client.extractors()
         assert len(extractors) >= 1
 
-    def test_bind_extractor(self):
-        name = "minilml6_test_bind_extractor"
+    def test_add_extraction_policy(self):
+        name = "minilml6_test_add_extraction_policy"
         namespace_name = "test.bindextractor"
         client = IndexifyClient.create_namespace(namespace_name)
         client.add_extraction_policy(

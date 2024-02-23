@@ -6,3 +6,4 @@ ve
 .vscode
 *.pyc
 dist
+.ipynb_checkpoints/

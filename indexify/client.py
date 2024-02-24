@@ -404,5 +404,6 @@ class IndexifyClient:
             response = self.post(
                 f"namespaces/{self.namespace}/upload_file",
                 files={"file": f},
+                timeout=None,
             )
             response.raise_for_status()

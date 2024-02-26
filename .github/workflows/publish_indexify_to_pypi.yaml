@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 jobs:
-extract-version:
+  extract-version:
     name: Extract Version Number
     runs-on: ubuntu-latest
     outputs:

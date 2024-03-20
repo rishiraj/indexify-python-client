@@ -8,10 +8,17 @@ from .index import Index
 from .utils import json_set_default
 from .data_containers import TextChunk
 from indexify.exceptions import ApiException
+from dataclasses import dataclass
 
 from typing import List, Optional, Union
 
 Document = namedtuple("Document", ["text", "labels"])
+
+SQLQueryRow = namedtuple("SQLQueryRow", ["content_id", "data"])
+
+@dataclass
+class SqlQueryResult:
+    result: List[SQLQueryRow]
 
 
 class IndexifyClient:
@@ -433,3 +440,26 @@ class IndexifyClient:
                 timeout=None,
             )
             response.raise_for_status()
+
+    def sql_query(self, query: str):
+        """
+        Execute a SQL query.
+
+        Args:
+            - query (str): SQL query to be executed
+        """
+        req = {"query": query}
+        response = self.post(
+            f"namespaces/{self.namespace}/sql_query",
+            json=req,
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+        result = response.json()
+        rows = []
+        for row in result["rows"]:
+            data = row["data"]
+            row = SQLQueryRow(content_id=data['content_id'], data=data.pop('content_id'))
+            rows.append(row)
+        return SqlQueryResult(result=rows)
+

@@ -10,7 +10,7 @@ from .data_containers import TextChunk
 from indexify.exceptions import ApiException
 from dataclasses import dataclass
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 Document = namedtuple("Document", ["text", "labels"])
 
@@ -18,7 +18,7 @@ SQLQueryRow = namedtuple("SQLQueryRow", ["content_id", "data"])
 
 @dataclass
 class SqlQueryResult:
-    result: List[SQLQueryRow]
+    result: List[Dict]
 
 
 class IndexifyClient:
@@ -459,7 +459,16 @@ class IndexifyClient:
         rows = []
         for row in result["rows"]:
             data = row["data"]
-            row = SQLQueryRow(content_id=data['content_id'], data=data.pop('content_id'))
-            rows.append(row)
+            rows.append(data)
         return SqlQueryResult(result=rows)
+    
+    def ingest_remote_file(self, url: str, mime_type: str, labels: Dict[str, str]):
+        req = {"url": url, "mime_type": mime_type, "labels": labels}
+        response = self.post(
+            f"namespaces/{self.namespace}/ingest_remote_file",
+            json=req,
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+        return response.json()
 

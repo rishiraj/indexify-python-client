@@ -151,7 +151,7 @@ class TestIntegrationTest(unittest.TestCase):
             name,
         )
 
-    def test_query_metadata(self):
+    def test_get_metadata(self):
         """
         need to add a new extractor which produce the metadata index
         wikipedia extractor would be that, would have metadata index
@@ -159,15 +159,14 @@ class TestIntegrationTest(unittest.TestCase):
         """
 
         namespace_name = "metadatatest"
-        binding_name = self.generate_short_id()
         client = IndexifyClient.create_namespace(namespace_name)
         time.sleep(2)
         client.add_extraction_policy(
             "tensorlake/wikipedia",
-            binding_name,
+            "wikipedia",
         )
 
-        time.sleep(5)
+        time.sleep(2)
         client.upload_file(
             os.path.join(
                 os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"
@@ -178,7 +177,7 @@ class TestIntegrationTest(unittest.TestCase):
         content = list(filter(lambda x: x.get("source") != "ingestion", content))
         assert len(content) > 0
         for c in content:
-            metadata = client.query_metadata(f"{binding_name}.metadata", c.get("id"))
+            metadata = client.get_metadata(c.get("id"))
             assert len(metadata) > 0
 
     def test_extractor_input_params(self):
@@ -267,6 +266,27 @@ class TestIntegrationTest(unittest.TestCase):
         query = "Where is Lucas from?"
         assert "Atlanta" in rag_chain.invoke(query)
 
+    # TODO: metadata not working outside default namespace
+        
+    def test_sql_query(self):        
+    
+        # namespace_name = "sqlquerytest"
+        # client = IndexifyClient.create_namespace(namespace_name)
+        client = IndexifyClient()
+        time.sleep(2)
+        print("add extraction policy")
+        client.add_extraction_policy(name="wikipedia", extractor="tensorlake/wikipedia")
+
+        time.sleep(2)
+        client.upload_file(
+            os.path.join(
+                os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"
+            )
+        )
+        time.sleep(25)
+
+        query_result = client.sql_query("select * from ingestion")
+        assert len(query_result.result) == 1
 
 if __name__ == "__main__":
     unittest.main()

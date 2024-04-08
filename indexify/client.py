@@ -155,10 +155,24 @@ class IndexifyClient:
     def put(self, endpoint: str, **kwargs) -> httpx.Response:
         # Not Implemented
         raise NotImplementedError
-
+    
     def delete(self, endpoint: str, **kwargs) -> httpx.Response:
-        # Not Implemented
-        raise NotImplementedError
+        """
+        Make a DELETE request to the Indexify service.
+
+        :param endpoint: The endpoint to make the request to.
+
+        Example usage:
+
+        ```
+        from indexify import IndexifyClient
+
+        client = IndexifyClient()
+        response = client.delete("namespaces")
+        print(response.json())
+        ```
+        """
+        return self._request("DELETE", url=f"{self._service_url}/{endpoint}", **kwargs)
 
     def close(self):
         """
@@ -394,6 +408,21 @@ class IndexifyClient:
         req = {"documents": documents}
         response = self.post(
             f"namespaces/{self.namespace}/add_texts",
+            json=req,
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+
+    def delete_documents(self, document_ids: List[str]) -> None:
+        """
+        Delete documents from current namespace.
+
+        Args:
+            - document_ids (List[str]): list of document ids to delete
+        """
+        req = {"content_ids": document_ids}
+        response = self.delete(
+            f"namespaces/{self.namespace}/content",
             json=req,
             headers={"Content-Type": "application/json"},
         )

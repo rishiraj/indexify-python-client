@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "indexify-dspy"
+version = "0.0.1"
+description = ""
+authors = ["Lucas Jackson <lucas@tensorlake.ai>", "Diptanu Choudhury <diptanuc@gmail.com>"]
+readme = "README.md"
+packages = [{include = "indexify_dspy"}]
+
+[tool.poetry.dependencies]
+python = "^3.10.0"
+indexify= "^0"
+dspy-ai= "^0"
+langchain= "^0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

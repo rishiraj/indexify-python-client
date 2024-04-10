@@ -153,8 +153,22 @@ class IndexifyClient:
         return self._request("POST", url=f"{self._service_url}/{endpoint}", **kwargs)
 
     def put(self, endpoint: str, **kwargs) -> httpx.Response:
-        # Not Implemented
-        raise NotImplementedError
+        """
+        Make a PUT request to the Indexify service.
+
+        :param endpoint: The endpoint to make the request to.
+
+        Example usage:
+
+        ```
+        from indexify import IndexifyClient
+
+        client = IndexifyClient()
+        response = client.put("namespaces", json={"name": "my-repo"})
+        print(response.json())
+        ```
+        """
+        return self._request("PUT", url=f"{self._service_url}/{endpoint}", **kwargs)
     
     def delete(self, endpoint: str, **kwargs) -> httpx.Response:
         """
@@ -427,6 +441,17 @@ class IndexifyClient:
             headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
+
+    def update_content(self, document_id: str, path: str) -> None:
+        """
+        Update a piece of content with a new file
+
+        Args:
+            - path (str): relative path to the file to be uploaded
+        """
+        with open(path, "rb") as f:
+            response = self.put(f"namespaces/{self.namespace}/content/{document_id}", files={"file": f}, timeout=None)
+            response.raise_for_status()
 
     def get_metadata(self, content_id: str) -> dict:
         """

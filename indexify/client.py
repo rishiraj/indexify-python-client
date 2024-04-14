@@ -497,6 +497,14 @@ class IndexifyClient:
             )
             response.raise_for_status()
 
+    def list_schemas(self) -> List[str]:
+        """
+        List all schemas in the current namespace.
+        """
+        response = self.get(f"namespaces/{self.namespace}/schemas")
+        response.raise_for_status()
+        return response.json()
+
     def sql_query(self, query: str):
         """
         Execute a SQL query.

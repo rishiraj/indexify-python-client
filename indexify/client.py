@@ -349,11 +349,21 @@ class IndexifyClient:
         except httpx.HTTPStatusError as exc:
             raise ApiException(exc.response.text)
         return
+    
+    def get_content_metadata(self, content_id: str) -> dict:
+        """
+        Get metadata for a specific content ID in a given index.
 
-    def get_content(
+        Args:
+            - content_id (str): content id to query
+        """
+        response = self.get(f"namespaces/{self.namespace}/content/{content_id}")
+        response.raise_for_status()
+        return response.json()
+
+    def get_extracted_content(
         self,
-        parent_id: str = None,
-        labels_eq: str = None,
+        content_id: str = None,
     ):
         """
         Get list of content from current namespace.
@@ -362,11 +372,7 @@ class IndexifyClient:
             - parent_id (str): Optional filter for parent id
             - labels_eq (str): Optional filter for labels
         """
-        params = {}
-        if parent_id:
-            params.update({"parent_id": parent_id})
-        if labels_eq:
-            params.update({"labels_eq": labels_eq})
+        params = {"parent_id": content_id}
 
         response = self.get(f"namespaces/{self.namespace}/content", params=params)
         response.raise_for_status()
@@ -453,7 +459,7 @@ class IndexifyClient:
             response = self.put(f"namespaces/{self.namespace}/content/{document_id}", files={"file": f}, timeout=None)
             response.raise_for_status()
 
-    def get_metadata(self, content_id: str) -> dict:
+    def get_structured_data(self, content_id: str) -> dict:
         """
         Query metadata for a specific content ID in a given index.
 

@@ -53,6 +53,7 @@ class TestIntegrationTest(unittest.TestCase):
 
         client.add_documents(
             Document(
+                id=None,
                 text="This is a test",
                 labels={"source": "test"},
             )
@@ -85,7 +86,7 @@ class TestIntegrationTest(unittest.TestCase):
         namespace_name = "test.getcontent"
         client = IndexifyClient.create_namespace(namespace=namespace_name)
         client.add_documents(
-            [Document(text="one", labels={"l1": "test"}), "two", "three"]
+            [Document(text="one", labels={"l1": "test"}, id=None), "two", "three"]
         )
         content = client.get_content()
         assert len(content) == 3
@@ -105,6 +106,7 @@ class TestIntegrationTest(unittest.TestCase):
         namespace_name = "test.downloadcontent"
         client = IndexifyClient.create_namespace(namespace=namespace_name)
         client.add_documents(
+            doc_id=None
             ["test download"]
         )
         content = client.get_content()
@@ -170,7 +172,8 @@ class TestIntegrationTest(unittest.TestCase):
         client.upload_file(
             os.path.join(
                 os.path.dirname(__file__), "files", "steph_curry_wikipedia.html"
-            )
+            ),
+            id=None
         )
         time.sleep(25)
         content = client.get_content()
@@ -229,7 +232,7 @@ class TestIntegrationTest(unittest.TestCase):
         )
 
         # Add Documents
-        client.add_documents("Lucas is from Atlanta Georgia")
+        client.add_documents("Lucas is from Atlanta Georgia", doc_id=None)
         time.sleep(10)
 
         # Initialize retriever

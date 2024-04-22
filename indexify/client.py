@@ -414,7 +414,7 @@ class IndexifyClient:
                 if isinstance(item, Document):
                     new_documents.append(item)
                 elif isinstance(item, str):
-                    new_documents.append(Document(item, {}, id=doc_id))
+                    new_documents.append(Document(item, {}, id=None))
                 else:
                     raise ValueError(
                         "List items must be either Document instances or strings."

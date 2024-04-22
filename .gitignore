@@ -9,3 +9,9 @@ dist
 .ipynb_checkpoints/
 rag/
 *.mp3
+*.mp4
+*.pdf
+*.jpeg
+/pdf
+/images
+.DS_Store

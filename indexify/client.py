@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 from typing import List, Optional, Union, Dict
 
-Document = namedtuple("Document", ["text", "labels"])
+Document = namedtuple("Document", ["text", "labels", "id"])
 
 SQLQueryRow = namedtuple("SQLQueryRow", ["content_id", "data"])
 
@@ -396,7 +396,7 @@ class IndexifyClient:
             raise ApiException(exc.response.text)
 
     def add_documents(
-        self, documents: Union[Document, str, List[Union[Document, str]]]
+        self, documents: Union[Document, str, List[Union[Document, str]]], doc_id=None
     ) -> None:
         """
         Add documents to current namespace.
@@ -407,14 +407,14 @@ class IndexifyClient:
         if isinstance(documents, Document):
             documents = [documents]
         elif isinstance(documents, str):
-            documents = [Document(documents, {})]
+            documents = [Document(documents, {}, id=doc_id)]
         elif isinstance(documents, list):
             new_documents = []
             for item in documents:
                 if isinstance(item, Document):
                     new_documents.append(item)
                 elif isinstance(item, str):
-                    new_documents.append(Document(item, {}))
+                    new_documents.append(Document(item, {}, id=doc_id))
                 else:
                     raise ValueError(
                         "List items must be either Document instances or strings."
@@ -425,13 +425,20 @@ class IndexifyClient:
                 "Invalid type for documents. Expected Document, str, or list of these."
             )
 
-        req = {"documents": documents}
+        req = {"documents": [doc._asdict() for doc in documents]}
         response = self.post(
             f"namespaces/{self.namespace}/add_texts",
             json=req,
             headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
+        # req = {"documents": documents}
+        # response = self.post(
+        #     f"namespaces/{self.namespace}/add_texts",
+        #     json=req,
+        #     headers={"Content-Type": "application/json"},
+        # )
+        # response.raise_for_status()
 
     def delete_documents(self, document_ids: List[str]) -> None:
         """

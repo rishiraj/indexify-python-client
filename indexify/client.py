@@ -425,20 +425,14 @@ class IndexifyClient:
                 "Invalid type for documents. Expected Document, str, or list of these."
             )
 
-        req = {"documents": [doc._asdict() for doc in documents]}
+        req = {"documents": documents}
+        # req = {"documents": [doc._asdict() for doc in documents]}
         response = self.post(
             f"namespaces/{self.namespace}/add_texts",
             json=req,
             headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
-        # req = {"documents": documents}
-        # response = self.post(
-        #     f"namespaces/{self.namespace}/add_texts",
-        #     json=req,
-        #     headers={"Content-Type": "application/json"},
-        # )
-        # response.raise_for_status()
 
     def delete_documents(self, document_ids: List[str]) -> None:
         """

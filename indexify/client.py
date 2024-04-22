@@ -555,7 +555,7 @@ class IndexifyClient:
         Returns:
             str: a unique hexadecimal string
         """
-        return uuid.uuid4().hex
+        return uuid.uuid4().hex[:32]
     
     def generate_hash_from_string(self, input_string: str):
         """
@@ -568,6 +568,6 @@ class IndexifyClient:
             str: The hexadecimal hash of the input string.
         """
         hash_object = hashlib.sha256(input_string.encode())
-        return hash_object.hexdigest()
+        return hash_object.hexdigest()[:32]
 
 

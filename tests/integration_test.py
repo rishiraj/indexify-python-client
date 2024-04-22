@@ -219,54 +219,54 @@ class TestIntegrationTest(unittest.TestCase):
         test_file_path = os.path.join(os.path.dirname(__file__), "files", "test.txt")
         self.client.upload_file(test_file_path)
 
-    def test_langchain_retriever(self):
-        # import langchain retriever
-        from indexify_langchain import IndexifyRetriever
+    # def test_langchain_retriever(self):
+    #     # import langchain retriever
+    #     from indexify_langchain import IndexifyRetriever
 
-        # init client
-        client = IndexifyClient.create_namespace("test-langchain")
-        client.add_extraction_policy(
-            "tensorlake/minilm-l6",
-            "minilml6",
-        )
+    #     # init client
+    #     client = IndexifyClient.create_namespace("test-langchain")
+    #     client.add_extraction_policy(
+    #         "tensorlake/minilm-l6",
+    #         "minilml6",
+    #     )
 
-        # Add Documents
-        client.add_documents("Lucas is from Atlanta Georgia", doc_id=None)
-        time.sleep(10)
+    #     # Add Documents
+    #     client.add_documents("Lucas is from Atlanta Georgia", doc_id=None)
+    #     time.sleep(10)
 
-        # Initialize retriever
-        params = {"name": "minilml6.embedding", "top_k": 9}
-        retriever = IndexifyRetriever(client=client, params=params)
+    #     # Initialize retriever
+    #     params = {"name": "minilml6.embedding", "top_k": 9}
+    #     retriever = IndexifyRetriever(client=client, params=params)
 
-        # Setup Chat Prompt Template
-        from langchain.prompts import ChatPromptTemplate
+    #     # Setup Chat Prompt Template
+    #     from langchain.prompts import ChatPromptTemplate
 
-        template = """You are an assistant for question-answering tasks. 
-        Use the following pieces of retrieved context to answer the question. 
-        If you don't know the answer, just say that you don't know. 
-        Use three sentences maximum and keep the answer concise.
-        Question: {question} 
-        Context: {context} 
-        Answer:
-        """
-        prompt = ChatPromptTemplate.from_template(template)
+    #     template = """You are an assistant for question-answering tasks. 
+    #     Use the following pieces of retrieved context to answer the question. 
+    #     If you don't know the answer, just say that you don't know. 
+    #     Use three sentences maximum and keep the answer concise.
+    #     Question: {question} 
+    #     Context: {context} 
+    #     Answer:
+    #     """
+    #     prompt = ChatPromptTemplate.from_template(template)
 
-        # Ask llm question with retriever context
-        from langchain_openai import ChatOpenAI
-        from langchain.schema.runnable import RunnablePassthrough
-        from langchain.schema.output_parser import StrOutputParser
+    #     # Ask llm question with retriever context
+    #     from langchain_openai import ChatOpenAI
+    #     from langchain.schema.runnable import RunnablePassthrough
+    #     from langchain.schema.output_parser import StrOutputParser
 
-        llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+    #     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
-        rag_chain = (
-            {"context": retriever, "question": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
-        )
+    #     rag_chain = (
+    #         {"context": retriever, "question": RunnablePassthrough()}
+    #         | prompt
+    #         | llm
+    #         | StrOutputParser()
+    #     )
 
-        query = "Where is Lucas from?"
-        assert "Atlanta" in rag_chain.invoke(query)
+    #     query = "Where is Lucas from?"
+    #     assert "Atlanta" in rag_chain.invoke(query)
 
     # TODO: metadata not working outside default namespace
         

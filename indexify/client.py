@@ -425,8 +425,7 @@ class IndexifyClient:
                 "Invalid type for documents. Expected Document, str, or list of these."
             )
 
-        req = {"documents": documents}
-        # req = {"documents": [doc._asdict() for doc in documents]}
+        req = {"documents": [doc._asdict() for doc in documents]}
         response = self.post(
             f"namespaces/{self.namespace}/add_texts",
             json=req,

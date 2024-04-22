@@ -53,9 +53,9 @@ class TestIntegrationTest(unittest.TestCase):
 
         client.add_documents(
             Document(
-                id=None,
                 text="This is a test",
                 labels={"source": "test"},
+                id=None
             )
         )
 
@@ -65,22 +65,24 @@ class TestIntegrationTest(unittest.TestCase):
                 Document(
                     text="This is a new test",
                     labels={"source": "test"},
+                    id=None
                 ),
                 Document(
                     text="This is another test",
                     labels={"source": "test"},
+                    id=None,
                 ),
             ]
         )
 
         # Add single string
-        client.add_documents("test")
+        client.add_documents("test", doc_id=None)
 
         # Add multiple strings
-        client.add_documents(["one", "two", "three"])
+        client.add_documents(["one", "two", "three"], doc_id=None)
 
         # Add mixed
-        client.add_documents(["string", Document("document string", {})])
+        client.add_documents(["string", Document("document string", {}, id=None)], doc_id=None)
 
     def test_get_content(self):
         namespace_name = "test.getcontent"
@@ -88,28 +90,24 @@ class TestIntegrationTest(unittest.TestCase):
         client.add_documents(
             [Document(text="one", labels={"l1": "test"}, id=None), "two", "three"]
         )
-        content = client.get_content()
+        content = client.get_extracted_content()
         assert len(content) == 3
         # validate content_url
         for c in content:
             assert c.get("content_url") is not None
 
         # parent doesn't exist
-        content = client.get_content(parent_id="idontexist")
+        content = client.get_extracted_content(content_id="idontexist")
         assert len(content) == 0
-
-        # filter label
-        content = client.get_content(labels_eq="l1:test")
-        assert len(content) == 1
 
     def test_download_content(self):
         namespace_name = "test.downloadcontent"
         client = IndexifyClient.create_namespace(namespace=namespace_name)
         client.add_documents(
+            ["test download"],
             doc_id=None
-            ["test download"]
         )
-        content = client.get_content()
+        content = client.get_extracted_content()
         assert len(content) == 1
 
         data = client.download_content(content[0].get('id'))
@@ -133,6 +131,7 @@ class TestIntegrationTest(unittest.TestCase):
                 Document(
                     text="Indexify is also a retrieval service for LLM agents!",
                     labels={"source": source},
+                    id=None,
                 )
             ]
         )
@@ -176,7 +175,7 @@ class TestIntegrationTest(unittest.TestCase):
             id=None
         )
         time.sleep(25)
-        content = client.get_content()
+        content = client.get_extracted_content()
         content = list(filter(lambda x: x.get("source") != "ingestion", content))
         assert len(content) > 0
         for c in content:

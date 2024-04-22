@@ -1,4 +1,6 @@
 import httpx
+import uuid
+import hashlib
 import json
 from collections import namedtuple
 from .settings import DEFAULT_SERVICE_URL
@@ -414,7 +416,7 @@ class IndexifyClient:
                 if isinstance(item, Document):
                     new_documents.append(item)
                 elif isinstance(item, str):
-                    new_documents.append(Document(item, {}, id=None))
+                    new_documents.append(Document(item, {}, id=None)) # don't pass in id for a string content because doesn't make sense to have same content id for all strings
                 else:
                     raise ValueError(
                         "List items must be either Document instances or strings."
@@ -545,4 +547,27 @@ class IndexifyClient:
         )
         response.raise_for_status()
         return response.json()
+    
+    def generate_unique_hex_id(self):
+        """
+        Generate a unique hexadecimal identifier
+
+        Returns:
+            str: a unique hexadecimal string
+        """
+        return uuid.uuid4().hex
+    
+    def generate_hash_from_string(self, input_string: str):
+        """
+        Generate a hash for the given string and return it as a hexadecimal string.
+        
+        Args:
+            input_string (str): The input string to hash.
+        
+        Returns:
+            str: The hexadecimal hash of the input string.
+        """
+        hash_object = hashlib.sha256(input_string.encode())
+        return hash_object.hexdigest()
+
 

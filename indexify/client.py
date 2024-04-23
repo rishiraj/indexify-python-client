@@ -488,17 +488,19 @@ class IndexifyClient:
         response.raise_for_status()
         return response.json()["results"]
 
-    def upload_file(self, path: str):
+    def upload_file(self, path: str, labels: dict = {}):
         """
         Upload a file.
 
         Args:
             - path (str): relative path to the file to be uploaded
+            - labels (dict): labels to be associated with the file
         """
         with open(path, "rb") as f:
             response = self.post(
                 f"namespaces/{self.namespace}/upload_file",
                 files={"file": f},
+                data = labels,
                 timeout=None,
             )
             response.raise_for_status()

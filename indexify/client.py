@@ -489,7 +489,7 @@ class IndexifyClient:
         response.raise_for_status()
         return response.json().get("metadata",[])
 
-    def search_index(self, name: str, query: str, top_k: int, filters: List[str] = None) -> list[TextChunk]:
+    def search_index(self, name: str, query: str, top_k: int, filters: List[str] = []) -> list[TextChunk]:
         """
         Search index in the current namespace.
 
@@ -499,8 +499,6 @@ class IndexifyClient:
             - top_k (int): top k nearest neighbors to be returned
             - filters (List[str]): list of filters to apply
         """
-        if filters is None:
-            filters = []
         req = {"index": name, "query": query, "k": top_k, "filters": filters}
         response = self.post(
             f"namespaces/{self.namespace}/search",
@@ -510,7 +508,7 @@ class IndexifyClient:
         response.raise_for_status()
         return response.json()["results"]
 
-    def upload_file(self, path: str, id=None, labels: dict = {}):
+    def upload_file(self, path: str, id=None, labels: dict = {}) -> str:
         """
         Upload a file.
 
@@ -530,6 +528,8 @@ class IndexifyClient:
                 timeout=None,
             )
             response.raise_for_status()
+            response_json = response.json()
+            return response_json["content_id"]
 
     def list_schemas(self) -> List[str]:
         """

@@ -505,6 +505,7 @@ class IndexifyClient:
             response = self.post(
                 f"namespaces/{self.namespace}/upload_file",
                 files={"file": f},
+                data=labels,
                 params=params,
                 timeout=None,
             )

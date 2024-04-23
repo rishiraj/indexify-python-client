@@ -1,4 +1,6 @@
 import httpx
+import uuid
+import hashlib
 import json
 from collections import namedtuple
 from .settings import DEFAULT_SERVICE_URL
@@ -12,7 +14,7 @@ from dataclasses import dataclass
 
 from typing import List, Optional, Union, Dict
 
-Document = namedtuple("Document", ["text", "labels"])
+Document = namedtuple("Document", ["text", "labels", "id"])
 
 SQLQueryRow = namedtuple("SQLQueryRow", ["content_id", "data"])
 
@@ -396,7 +398,7 @@ class IndexifyClient:
             raise ApiException(exc.response.text)
 
     def add_documents(
-        self, documents: Union[Document, str, List[Union[Document, str]]]
+        self, documents: Union[Document, str, List[Union[Document, str]]], doc_id=None
     ) -> None:
         """
         Add documents to current namespace.
@@ -407,14 +409,14 @@ class IndexifyClient:
         if isinstance(documents, Document):
             documents = [documents]
         elif isinstance(documents, str):
-            documents = [Document(documents, {})]
+            documents = [Document(documents, {}, id=doc_id)]
         elif isinstance(documents, list):
             new_documents = []
             for item in documents:
                 if isinstance(item, Document):
                     new_documents.append(item)
                 elif isinstance(item, str):
-                    new_documents.append(Document(item, {}))
+                    new_documents.append(Document(item, {}, id=None)) # don't pass in id for a string content because doesn't make sense to have same content id for all strings
                 else:
                     raise ValueError(
                         "List items must be either Document instances or strings."
@@ -425,7 +427,7 @@ class IndexifyClient:
                 "Invalid type for documents. Expected Document, str, or list of these."
             )
 
-        req = {"documents": documents}
+        req = {"documents": [doc._asdict() for doc in documents]}
         response = self.post(
             f"namespaces/{self.namespace}/add_texts",
             json=req,
@@ -488,7 +490,7 @@ class IndexifyClient:
         response.raise_for_status()
         return response.json()["results"]
 
-    def upload_file(self, path: str, labels: dict = {}):
+    def upload_file(self, path: str, id=None, labels: dict = {}):
         """
         Upload a file.
 
@@ -496,11 +498,14 @@ class IndexifyClient:
             - path (str): relative path to the file to be uploaded
             - labels (dict): labels to be associated with the file
         """
+        params={}
+        if id is not None:
+            params['id'] = id
         with open(path, "rb") as f:
             response = self.post(
                 f"namespaces/{self.namespace}/upload_file",
                 files={"file": f},
-                data = labels,
+                params=params,
                 timeout=None,
             )
             response.raise_for_status()
@@ -543,4 +548,27 @@ class IndexifyClient:
         )
         response.raise_for_status()
         return response.json()
+    
+    def generate_unique_hex_id(self):
+        """
+        Generate a unique hexadecimal identifier
+
+        Returns:
+            str: a unique hexadecimal string
+        """
+        return uuid.uuid4().hex[:16]
+    
+    def generate_hash_from_string(self, input_string: str):
+        """
+        Generate a hash for the given string and return it as a hexadecimal string.
+        
+        Args:
+            input_string (str): The input string to hash.
+        
+        Returns:
+            str: The hexadecimal hash of the input string.
+        """
+        hash_object = hashlib.sha256(input_string.encode())
+        return hash_object.hexdigest()[:16]
+
 

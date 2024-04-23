@@ -5,7 +5,7 @@ docker-compose up -d
 serverReady=false
 while [ "$serverReady" != true ]; do
     output=$(curl --silent --fail http://localhost:8900/extractors | jq '.extractors | length' 2>/dev/null)
-    if [[ $? -eq 0 && "$output" -eq 2 ]]; then
+    if [[ $? -eq 0 && "$output" -ge 2 ]]; then
         echo "Server is ready with 2 extractors."
         serverReady=true
     else

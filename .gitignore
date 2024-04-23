@@ -1,6 +1,6 @@
 .pytest_cache
 __pycache__
-ve
+ve*
 .venv
 .idea
 .vscode
@@ -9,3 +9,9 @@ dist
 .ipynb_checkpoints/
 rag/
 *.mp3
+*.mp4
+*.pdf
+*.jpeg
+/pdf
+/images
+.DS_Store

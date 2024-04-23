@@ -472,7 +472,7 @@ class IndexifyClient:
         response.raise_for_status()
         return response.json().get("metadata",[])
 
-    def search_index(self, name: str, query: str, top_k: int) -> list[TextChunk]:
+    def search_index(self, name: str, query: str, top_k: int, filters: List[str]) -> list[TextChunk]:
         """
         Search index in the current namespace.
 
@@ -481,7 +481,7 @@ class IndexifyClient:
             - query (str): query string
             - top_k (int): top k nearest neighbors to be returned
         """
-        req = {"index": name, "query": query, "k": top_k}
+        req = {"index": name, "query": query, "k": top_k, "filters": filters}
         response = self.post(
             f"namespaces/{self.namespace}/search",
             json=req,

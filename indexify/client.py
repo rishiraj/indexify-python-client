@@ -1,3 +1,4 @@
+import yaml
 import httpx
 import uuid
 import hashlib
@@ -46,14 +47,30 @@ class IndexifyClient:
         self,
         service_url: str = DEFAULT_SERVICE_URL,
         namespace: str = "default",
+        config_path: Optional[str] = None,
         *args,
         **kwargs,
     ):
+        if config_path:
+            with open(config_path, 'r') as file:
+                config = yaml.safe_load(file)
+                
+            if config.get('use_tls', False):
+                tls_config = config['tls_config']
+                self._client = httpx.Client(
+                    http2=True,
+                    cert=(tls_config['cert_path'], tls_config['key_path']),
+                    verify=tls_config.get('ca_bundle_path', True)
+                )
+            else:
+                self._client = httpx.Client(*args, **kwargs)
+        else:
+            self._client = httpx.Client(*args, **kwargs)
+
         self.namespace: str = namespace
         self.extraction_policies: List[ExtractionPolicy] = []
         self.labels: dict = {}
         self._service_url = service_url
-        self._client = httpx.Client(*args, **kwargs)
 
         # get namespace data
         response = self.get(f"namespaces/{self.namespace}")
@@ -472,7 +489,7 @@ class IndexifyClient:
         response.raise_for_status()
         return response.json().get("metadata",[])
 
-    def search_index(self, name: str, query: str, top_k: int, filters: List[str]) -> list[TextChunk]:
+    def search_index(self, name: str, query: str, top_k: int, filters: List[str] = None) -> list[TextChunk]:
         """
         Search index in the current namespace.
 
@@ -480,7 +497,10 @@ class IndexifyClient:
             - name (str): name of index to search
             - query (str): query string
             - top_k (int): top k nearest neighbors to be returned
+            - filters (List[str]): list of filters to apply
         """
+        if filters is None:
+            filters = []
         req = {"index": name, "query": query, "k": top_k, "filters": filters}
         response = self.post(
             f"namespaces/{self.namespace}/search",

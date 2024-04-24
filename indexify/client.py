@@ -45,7 +45,7 @@ class IndexifyClient:
 
     def __init__(
         self,
-        service_url: str = DEFAULT_SERVICE_URL,
+        service_url: str = DEFAULT_SERVICE_URL, # switch this to DEFAULT_SERVICE_URL_HTTPS for TLS
         namespace: str = "default",
         config_path: Optional[str] = None,
         *args,

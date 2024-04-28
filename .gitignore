@@ -16,3 +16,4 @@ rag/
 /images
 .DS_Store
 .dev-tls
+*.log

@@ -1,6 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Optional
-
+from typing import Optional, List
 
 @dataclass
 class ExtractionPolicy:
@@ -26,3 +25,10 @@ class ExtractionPolicy:
         if "filters_eq" in json:
             json["labels_eq"] = json.pop("filters_eq")
         return ExtractionPolicy(**json)
+
+@dataclass
+class ExtractionGraph:
+    id: str
+    name: str
+    extraction_policies: List[ExtractionPolicy]
+

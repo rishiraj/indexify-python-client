@@ -6,7 +6,7 @@ import json
 from collections import namedtuple
 from .settings import DEFAULT_SERVICE_URL
 from .extractor import Extractor
-from .extraction_policy import ExtractionPolicy
+from .extraction_policy import ExtractionPolicy, ExtractionGraph
 from .index import Index
 from .utils import json_set_default
 from .data_containers import TextChunk
@@ -69,7 +69,7 @@ class IndexifyClient:
             self._client = httpx.Client(*args, **kwargs)
 
         self.namespace: str = namespace
-        self.extraction_policies: List[ExtractionPolicy] = []
+        self.extraction_graphs: List[ExtractionGraph] = []
         self.labels: dict = {}
         self._service_url = service_url
         self._timeout = kwargs.get("timeout")
@@ -79,8 +79,8 @@ class IndexifyClient:
         response.raise_for_status()
         resp_json = response.json()
         # initialize extraction_policies
-        for eb in resp_json["namespace"]["extraction_policies"]:
-            self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
+        for eb in resp_json["namespace"]["extraction_graphs"]:
+            self.extraction_graphs.append(ExtractionGraph.from_dict(eb))
 
     @classmethod
     def with_mtls(
@@ -245,7 +245,7 @@ class IndexifyClient:
     def create_namespace(
         self,
         namespace: str,
-        extraction_policies: list = [],
+        extraction_graphs: list = [],
         labels: dict = {},
         service_url: str = DEFAULT_SERVICE_URL,
     ) -> "IndexifyClient":
@@ -255,16 +255,16 @@ class IndexifyClient:
         Returns:
             IndexifyClient: a new client with the given namespace
         """
-        extraction_policies = []
-        for bd in extraction_policies:
-            if isinstance(bd, ExtractionPolicy):
-                extraction_policies.append(bd.to_dict())
+        extraction_graphs = []
+        for bd in extraction_graphs:
+            if isinstance(bd, extraction_graphs):
+                extraction_graphs.append(bd.to_dict())
             else:
-                extraction_policies.append(bd)
+                extraction_graphs.append(bd)
 
         req = {
             "name": namespace,
-            "extraction_policies": extraction_policies,
+            "extraction_graphs": extraction_graphs,
             "labels": labels,
         }
 

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, asdict
 from typing import Optional, List
 
+
 @dataclass
 class ExtractionPolicy:
     extractor: str
@@ -15,7 +16,7 @@ class ExtractionPolicy:
 
     def __str__(self) -> str:
         return self.__repr__()
-    
+
     def to_dict(self) -> dict:
         filtered_dict = {k: v for k, v in asdict(self).items() if v is not None}
         return filtered_dict
@@ -26,6 +27,7 @@ class ExtractionPolicy:
             json["labels_eq"] = json.pop("filters_eq")
         json["id"] = json.get("id", None)
         return ExtractionPolicy(**json)
+
 
 @dataclass
 class ExtractionGraph:
@@ -39,24 +41,28 @@ class ExtractionGraph:
         if "namespace" in json.keys():
             json.pop("namespace")
         return ExtractionGraph(**json)
-    
+
     @staticmethod
     def from_yaml(spec: str):
         import yaml
+
         return ExtractionGraph.from_dict(yaml.load(spec, Loader=yaml.FullLoader))
-    
+
     def to_dict(self) -> dict:
         filtered_dict = {k: v for k, v in asdict(self).items() if v is not None}
         return filtered_dict
-    
+
+
 class ExtractionGraphBuilder:
     def __init__(self, name: str):
         self.name = name
         self.extraction_policies = []
 
-    def policy(self, policy: ExtractionPolicy) -> 'ExtractionGraphBuilder':
+    def policy(self, policy: ExtractionPolicy) -> "ExtractionGraphBuilder":
         self.extraction_policies.append(policy)
         return self
 
     def build(self):
-        return ExtractionGraph(id=self.id, name=self.name, extraction_policies=self.extraction_policies)
+        return ExtractionGraph(
+            id=self.id, name=self.name, extraction_policies=self.extraction_policies
+        )

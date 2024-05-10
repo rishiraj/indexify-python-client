@@ -319,7 +319,7 @@ class IndexifyClient:
         for eb in response.json()["namespace"]["extraction_policies"]:
             self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
         return self.extraction_policies
-    
+
     def create_extraction_graph(self, extraction_graph: ExtractionGraph):
         """
         Create a new extraction graph.
@@ -384,7 +384,10 @@ class IndexifyClient:
             raise ApiException(exc.response.text)
 
     def add_documents(
-        self, extraction_graphs: Union[str, List[str]], documents: Union[Document, str, List[Union[Document, str]]], doc_id=None
+        self,
+        extraction_graphs: Union[str, List[str]],
+        documents: Union[Document, str, List[Union[Document, str]]],
+        doc_id=None,
     ) -> None:
         """
         Add documents to current namespace.
@@ -417,7 +420,10 @@ class IndexifyClient:
                 "Invalid type for documents. Expected Document, str, or list of these."
             )
 
-        req = {"documents": [doc._asdict() for doc in documents], "extraction_graph_names": extraction_graphs}
+        req = {
+            "documents": [doc._asdict() for doc in documents],
+            "extraction_graph_names": extraction_graphs,
+        }
         response = self.post(
             f"namespaces/{self.namespace}/add_texts",
             json=req,

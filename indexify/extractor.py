@@ -17,7 +17,12 @@ class ExtractorSchema:
 
 class Extractor:
     def __init__(
-        self, name: str, description: str, input_params: dict, outputs: ExtractorSchema, input_mime_types: list[str]
+        self,
+        name: str,
+        description: str,
+        input_params: dict,
+        outputs: ExtractorSchema,
+        input_mime_types: list[str],
     ):
         self.name = name
         self.description = description

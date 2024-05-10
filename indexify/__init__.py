@@ -9,7 +9,6 @@ __all__ = [
     "Document",
     "IndexifyClient",
     "ExtractionGraph",
-    "ExtractionGraphBuilder"
-    "ExtractionPolicy",
+    "ExtractionGraphBuilder" "ExtractionPolicy",
     "DEFAULT_SERVICE_URL",
 ]

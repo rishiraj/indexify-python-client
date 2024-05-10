@@ -319,56 +319,23 @@ class IndexifyClient:
         for eb in response.json()["namespace"]["extraction_policies"]:
             self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
         return self.extraction_policies
-
-    def add_extraction_policy(
-        self,
-        extractor: str,
-        name: str,
-        input_params: dict = {},
-        labels_eq: str = None,
-        content_source="ingestion",
-    ) -> dict:
-        """Add a new extraction policy.
+    
+    def create_extraction_graph(self, extraction_graph: ExtractionGraph):
+        """
+        Create a new extraction graph.
 
         Args:
-            - extractor (str): Name of the extractor
-            - name (str): Name for this instance
-            - input_params (dict): Dictionary containing extractor input params
-            - filter (Filter): Optional filter for this extractor
-
-        Returns:
-            dict: response payload
-
-        Examples:
-            >>> repo.add_extraction_policy("EfficientNet", "efficientnet")
-
-            >>> repo.add_extraction_policy("MiniLML6", "minilm")
-
+            - extraction_graph (ExtractionGraph): the extraction graph to create
         """
-        req = {
-            "extractor": extractor,
-            "name": name,
-            "input_params": input_params,
-            "filters_eq": labels_eq,
-            "content_source": content_source,
-        }
-        if req["filters_eq"] == None:
-            del req["filters_eq"]
-
+        req = extraction_graph.to_dict()
+        req["namespace"] = self.namespace
         request_body = json.dumps(req, default=json_set_default)
         response = self.post(
-            f"namespaces/{self.namespace}/extraction_policies",
+            f"namespaces/{self.namespace}/extraction_graphs",
             data=request_body,
             headers={"Content-Type": "application/json"},
         )
-
-        # update self.extractor_bindings
-        self.get_extraction_policies()
-
-        try:
-            response.raise_for_status()
-        except httpx.HTTPStatusError as exc:
-            raise ApiException(exc.response.text)
+        response.raise_for_status()
         return
 
     def get_content_metadata(self, content_id: str) -> dict:
@@ -417,7 +384,7 @@ class IndexifyClient:
             raise ApiException(exc.response.text)
 
     def add_documents(
-        self, documents: Union[Document, str, List[Union[Document, str]]], doc_id=None
+        self, extraction_graphs: Union[str, List[str]], documents: Union[Document, str, List[Union[Document, str]]], doc_id=None
     ) -> None:
         """
         Add documents to current namespace.
@@ -425,6 +392,8 @@ class IndexifyClient:
         Args:
             - documents (Union[Document, str, List[Union[Document, str]]]): this can be a list of strings, list of Documents or a mix of both
         """
+        if isinstance(extraction_graphs, str):
+            extraction_graphs = [extraction_graphs]
         if isinstance(documents, Document):
             documents = [documents]
         elif isinstance(documents, str):
@@ -448,7 +417,7 @@ class IndexifyClient:
                 "Invalid type for documents. Expected Document, str, or list of these."
             )
 
-        req = {"documents": [doc._asdict() for doc in documents]}
+        req = {"documents": [doc._asdict() for doc in documents], "extraction_graph_names": extraction_graphs}
         response = self.post(
             f"namespaces/{self.namespace}/add_texts",
             json=req,

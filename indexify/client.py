@@ -75,11 +75,7 @@ class IndexifyClient:
         self._timeout = kwargs.get("timeout")
 
         # get namespace data
-        response = self.get(f"namespaces/{self.namespace}")
-        resp_json = response.json()
-        # initialize extraction_policies
-        for eb in resp_json["namespace"]["extraction_graphs"]:
-            self.extraction_graphs.append(ExtractionGraph.from_dict(eb))
+        self.extraction_graphs = self.get_extraction_graphs()
 
     @classmethod
     def with_mtls(
@@ -312,16 +308,18 @@ class IndexifyClient:
             extractors.append(Extractor.from_dict(ed))
         return extractors
 
-    def get_extraction_policies(self):
+    def get_extraction_graphs(self) -> List[ExtractionGraph]:
         """
         Retrieve and update the list of extraction policies for the current namespace.
         """
         response = self.get(f"namespaces/{self.namespace}")
+        json = response.json()
 
-        self.extraction_policies = []
-        for eb in response.json()["namespace"]["extraction_policies"]:
-            self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
-        return self.extraction_policies
+        self.extraction_graphs = []
+        for graph in json["namespace"]["extraction_graphs"]:
+            self.extraction_graphs.append(ExtractionGraph.from_dict(graph))
+
+        return self.extraction_graphs
 
     def create_extraction_graph(self, extraction_graph: ExtractionGraph):
         """

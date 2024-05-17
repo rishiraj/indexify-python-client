@@ -375,6 +375,7 @@ class IndexifyClient:
             - id (str): id of content to download
         """
         response = self.get(f"namespaces/{self.namespace}/content/{id}/download")
+        return response.content
 
     def add_documents(
         self,

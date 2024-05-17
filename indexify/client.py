@@ -589,5 +589,5 @@ class IndexifyClient:
             print(f"Available extractors: {extractors}")
 
         if error.status == "SearchError":
-            indexes = [index._index for index in self.indexes()]
+            indexes = [index["name"] for index in self.indexes()]
             print(f"Available indexes: {indexes}")

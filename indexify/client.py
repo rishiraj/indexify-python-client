@@ -130,7 +130,7 @@ class IndexifyClient:
             status_code = str(response.status_code)
             if status_code.startswith("4") or status_code.startswith("5"):
                 error = Error.from_tonic_error_string(str(response.url), response.text)
-                self.print_additional_error_context(error)
+                self.__print_additional_error_context(error)
                 raise error
         except httpx.ConnectError:
             message = f"Make sure the server is running and accesible at {self._service_url}"
@@ -579,7 +579,7 @@ class IndexifyClient:
         hash_object = hashlib.sha256(input_string.encode())
         return hash_object.hexdigest()[:16]
 
-    def print_additional_error_context(self, error: Error):
+    def __print_additional_error_context(self, error: Error):
         print(error)
 
         if error.status == "ExtractionGraphError":

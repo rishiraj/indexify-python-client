@@ -1,5 +1,7 @@
 # Getting Started
 
+> Make sure that you've set the environment variable `OPENAI_API_KEY` inside your shell. If not, then the `query.py` file won't be able to succesfully run a query
+
 This is a simple example showing how we can load in wikipedia entries into an Indexify server to create a simple RAG application.
 
 Note that you will need to use 3 different terminals to run this example

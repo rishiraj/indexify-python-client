@@ -133,10 +133,14 @@ class IndexifyClient:
             response = self._client.request(method, timeout=self._timeout, **kwargs)
             status_code = str(response.status_code)
             if status_code.startswith("4") or status_code.startswith("5"):
-                raise Error.from_tonic_error_string(response.text)
+                error = Error.from_tonic_error_string(str(response.url), response.text)
+                self.print_additional_error_context(error)
+                raise error
         except httpx.ConnectError:
             message = f"Make sure the server is running and accesible at {self._service_url}"
-            raise Error(status="ConnectionError", message=message)
+            error = Error(status="ConnectionError", message=message)
+            print(error)
+            raise error
         return response
 
     def get(self, endpoint: str, **kwargs) -> httpx.Response:
@@ -575,3 +579,16 @@ class IndexifyClient:
         """
         hash_object = hashlib.sha256(input_string.encode())
         return hash_object.hexdigest()[:16]
+
+    def print_additional_error_context(self, error: Error):
+        print(error)
+
+        if error.status == "ExtractionGraphError":
+            graphs = [eg.name for eg in self.extraction_graphs]
+            extractors = [ext.name for ext in self.extractors()]
+            print(f"Available extraction graphs: {graphs}")
+            print(f"Available extractors: {extractors}")
+
+        if error.status == "SearchError":
+            indexes = [index._index for index in self.indexes()]
+            print(f"Available indexes: {indexes}")

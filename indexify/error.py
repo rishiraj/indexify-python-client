@@ -7,13 +7,18 @@ class Error(Exception):
         self.message = message
 
     @staticmethod
-    def from_tonic_error_string(error: str) -> "Error":
+    def from_tonic_error_string(url: str, error: str) -> "Error":
         data = error.split(", ")
-        status = data[0].split(": ")[1]
 
         message = data[1].split(": ", 1)[1]
         if message.startswith('"') and message.endswith('"'):
             message = message[1:-1]
+
+        status = "GeneralError"
+        if "extraction_graph" in url:
+            status = "ExtractionGraphError"
+        elif "search" in url:
+            status = "SearchError"
 
         error = Error(status, message)
         return error

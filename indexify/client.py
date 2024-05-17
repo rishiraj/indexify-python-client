@@ -9,10 +9,10 @@ from .extractor import Extractor
 from .extraction_policy import ExtractionPolicy, ExtractionGraph
 from .index import Index
 from .utils import json_set_default
+from .error import Error
 from .data_containers import TextChunk
 from indexify.exceptions import ApiException
 from dataclasses import dataclass
-
 from typing import List, Optional, Union, Dict
 
 Document = namedtuple("Document", ["text", "labels", "id"])
@@ -131,18 +131,12 @@ class IndexifyClient:
     def _request(self, method: str, **kwargs) -> httpx.Response:
         try:
             response = self._client.request(method, timeout=self._timeout, **kwargs)
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            code = e.response.status_code
-            message = e.response.text
-            print(f"HTTP Error [{code}]: {message}")
-            raise e
-        except httpx.ConnectError as e:
-            print(
-                "Connection Error:",
-                f"Make sure the service is running and accesible at {self._service_url}"
-            )
-            raise e
+            status_code = str(response.status_code)
+            if status_code.startswith("4") or status_code.startswith("5"):
+                raise Error.from_tonic_error_string(response.text)
+        except httpx.ConnectError:
+            message = f"Make sure the server is running and accesible at {self._service_url}"
+            raise Error(status="ConnectionError", message=message)
         return response
 
     def get(self, endpoint: str, **kwargs) -> httpx.Response:

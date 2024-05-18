@@ -382,7 +382,7 @@ class IndexifyClient:
         extraction_graphs: Union[str, List[str]],
         documents: Union[Document, str, List[Union[Document, str]]],
         doc_id=None,
-    ) -> None:
+    ) -> Union[str, List[str]]:
         """
         Add documents to current namespace.
 
@@ -423,6 +423,12 @@ class IndexifyClient:
             json=req,
             headers={"Content-Type": "application/json"},
         )
+        response.raise_for_status()
+        response_json = response.json()
+        content_ids = response_json["content_ids"]
+        if len(documents) == 1 and len(content_ids) == 1:
+            return content_ids[0]
+        return content_ids
 
     def delete_documents(self, document_ids: List[str]) -> None:
         """
@@ -556,6 +562,18 @@ class IndexifyClient:
             headers={"Content-Type": "application/json"},
         )
         return response.json()
+    
+    def wait_for_extraction(self, content_id: str):
+        """
+        Wait for extraction to complete for a given content id
+
+        Args:
+            - content_id (str): id of content
+        """
+        response = self.get(
+            f"namespaces/{self.namespace}/content/{content_id}/wait"
+        )
+        response.raise_for_status()
 
     def generate_unique_hex_id(self):
         """

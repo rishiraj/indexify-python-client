@@ -526,22 +526,6 @@ class IndexifyClient:
         )
         return response.json()
 
-    def get_child_list(self, content_id: str):
-        """
-        Get list of child for a given content id and their content
-
-        Args:
-            - content_id (str): id of content
-        """
-        content_tree = self.get_content_tree(content_id)
-        child_list = []
-        for item in content_tree['content_tree_metadata']:
-            if item['parent_id'] == content_id:
-                child_id = item['id']
-                content = self.download_content(child_id)
-                child_list.append({'id': child_id, 'content': content})
-        return child_list
-
     def sql_query(self, query: str):
         """
         Execute a SQL query.

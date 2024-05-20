@@ -348,24 +348,20 @@ class IndexifyClient:
         response = self.get(f"namespaces/{self.namespace}/content/{content_id}")
         return response.json()
 
-    def get_extracted_content(
-        self,
-        content_id: str = None,
-    ):
+    def get_extracted_content(self, content_id: str):
         """
-        Get list of content from current namespace.
-
+        Get list of child for a given content id and their content
         Args:
-            - parent_id (str): Optional filter for parent id
-            - labels_eq (str): Optional filter for labels
+            - content_id (str): id of content
         """
-        params = {"parent_id": content_id}
-
-        response = self.get(f"namespaces/{self.namespace}/content", params=params)
-        return [
-            self._add_content_url(content)
-            for content in response.json()["content_list"]
-        ]
+        content_tree = self.get_content_tree(content_id)
+        child_list = []
+        for item in content_tree['content_tree_metadata']:
+            if item['parent_id'] == content_id:
+                child_id = item['id']
+                content = self.download_content(child_id)
+                child_list.append({'id': child_id, 'content': content})
+        return child_list
 
     def download_content(self, id: str) -> bytes:
         """

@@ -1,0 +1,11 @@
+name: "summarize_and_chunk"
+extraction_policies:
+  - extractor: "tensorlake/chunk-extractor"
+    name: "chunker"
+    input_params:
+      chunk_size: 1000
+      overlap: 100
+
+  - extractor: "tensorlake/minilm-l6"
+    name: "wikiembedding"
+    content_source: "chunker"

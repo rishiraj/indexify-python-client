@@ -1,0 +1,4 @@
+indexify-extractor-sdk==0.0.63
+indexify==0.0.21
+wikipedia==1.4.0
+openai==1.30.1

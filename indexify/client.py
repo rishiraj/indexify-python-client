@@ -9,10 +9,10 @@ from .extractor import Extractor
 from .extraction_policy import ExtractionPolicy, ExtractionGraph
 from .index import Index
 from .utils import json_set_default
+from .error import Error
 from .data_containers import TextChunk
 from indexify.exceptions import ApiException
 from dataclasses import dataclass
-
 from typing import List, Optional, Union, Dict
 
 Document = namedtuple("Document", ["text", "labels", "id"])
@@ -75,12 +75,7 @@ class IndexifyClient:
         self._timeout = kwargs.get("timeout")
 
         # get namespace data
-        response = self.get(f"namespaces/{self.namespace}")
-        response.raise_for_status()
-        resp_json = response.json()
-        # initialize extraction_policies
-        for eb in resp_json["namespace"]["extraction_graphs"]:
-            self.extraction_graphs.append(ExtractionGraph.from_dict(eb))
+        self.extraction_graphs = self.get_extraction_graphs()
 
     @classmethod
     def with_mtls(
@@ -130,12 +125,18 @@ class IndexifyClient:
         return client
 
     def _request(self, method: str, **kwargs) -> httpx.Response:
-        response = self._client.request(method, timeout=self._timeout, **kwargs)
         try:
-            response.raise_for_status()
-        except httpx.HTTPStatusError as exc:
-            print(f"exception: {exc}, response text: {response.text}")
-            raise exc
+            response = self._client.request(method, timeout=self._timeout, **kwargs)
+            status_code = str(response.status_code)
+            if status_code.startswith("4") or status_code.startswith("5"):
+                error = Error.from_tonic_error_string(str(response.url), response.text)
+                self.__print_additional_error_context(error)
+                raise error
+        except httpx.ConnectError:
+            message = f"Make sure the server is running and accesible at {self._service_url}"
+            error = Error(status="ConnectionError", message=message)
+            print(error)
+            raise error
         return response
 
     def get(self, endpoint: str, **kwargs) -> httpx.Response:
@@ -291,7 +292,6 @@ class IndexifyClient:
             List[Index]: list of indexes in the current namespace
         """
         response = self.get(f"namespaces/{self.namespace}/indexes")
-        response.raise_for_status()
         return response.json()["indexes"]
 
     def extractors(self) -> List[Extractor]:
@@ -308,17 +308,18 @@ class IndexifyClient:
             extractors.append(Extractor.from_dict(ed))
         return extractors
 
-    def get_extraction_policies(self):
+    def get_extraction_graphs(self) -> List[ExtractionGraph]:
         """
         Retrieve and update the list of extraction policies for the current namespace.
         """
         response = self.get(f"namespaces/{self.namespace}")
-        response.raise_for_status()
+        json = response.json()
 
-        self.extraction_policies = []
-        for eb in response.json()["namespace"]["extraction_policies"]:
-            self.extraction_policies.append(ExtractionPolicy.from_dict(eb))
-        return self.extraction_policies
+        self.extraction_graphs = []
+        for graph in json["namespace"]["extraction_graphs"]:
+            self.extraction_graphs.append(ExtractionGraph.from_dict(graph))
+
+        return self.extraction_graphs
 
     def create_extraction_graph(self, extraction_graph: ExtractionGraph):
         """
@@ -335,7 +336,6 @@ class IndexifyClient:
             data=request_body,
             headers={"Content-Type": "application/json"},
         )
-        response.raise_for_status()
         return
 
     def get_content_metadata(self, content_id: str) -> dict:
@@ -346,7 +346,6 @@ class IndexifyClient:
             - content_id (str): content id to query
         """
         response = self.get(f"namespaces/{self.namespace}/content/{content_id}")
-        response.raise_for_status()
         return response.json()
 
     def get_extracted_content(
@@ -363,7 +362,6 @@ class IndexifyClient:
         params = {"parent_id": content_id}
 
         response = self.get(f"namespaces/{self.namespace}/content", params=params)
-        response.raise_for_status()
         return [
             self._add_content_url(content)
             for content in response.json()["content_list"]
@@ -377,18 +375,14 @@ class IndexifyClient:
             - id (str): id of content to download
         """
         response = self.get(f"namespaces/{self.namespace}/content/{id}/download")
-        try:
-            response.raise_for_status()
-            return response.content
-        except httpx.HTTPStatusError as exc:
-            raise ApiException(exc.response.text)
+        return response.content
 
     def add_documents(
         self,
         extraction_graphs: Union[str, List[str]],
         documents: Union[Document, str, List[Union[Document, str]]],
         doc_id=None,
-    ) -> None:
+    ) -> Union[str, List[str]]:
         """
         Add documents to current namespace.
 
@@ -430,6 +424,11 @@ class IndexifyClient:
             headers={"Content-Type": "application/json"},
         )
         response.raise_for_status()
+        response_json = response.json()
+        content_ids = response_json["content_ids"]
+        if len(documents) == 1 and len(content_ids) == 1:
+            return content_ids[0]
+        return content_ids
 
     def delete_documents(self, document_ids: List[str]) -> None:
         """
@@ -444,7 +443,6 @@ class IndexifyClient:
             json=req,
             headers={"Content-Type": "application/json"},
         )
-        response.raise_for_status()
 
     def update_content(self, document_id: str, path: str) -> None:
         """
@@ -457,7 +455,6 @@ class IndexifyClient:
             response = self.put(
                 f"namespaces/{self.namespace}/content/{document_id}", files={"file": f}
             )
-            response.raise_for_status()
 
     def get_structured_data(self, content_id: str) -> dict:
         """
@@ -469,7 +466,6 @@ class IndexifyClient:
         response = self.get(
             f"namespaces/{self.namespace}/content/{content_id}/metadata"
         )
-        response.raise_for_status()
         return response.json().get("metadata", [])
 
     def search_index(
@@ -490,7 +486,6 @@ class IndexifyClient:
             json=req,
             headers={"Content-Type": "application/json"},
         )
-        response.raise_for_status()
         return response.json()["results"]
 
     def upload_file(self, extraction_graphs: Union[str, List[str]], path: str, id=None, labels: dict = {}) -> str:
@@ -513,7 +508,6 @@ class IndexifyClient:
                 data=labels,
                 params=params,
             )
-            response.raise_for_status()
             response_json = response.json()
             return response_json["content_id"]
 
@@ -522,7 +516,6 @@ class IndexifyClient:
         List all schemas in the current namespace.
         """
         response = self.get(f"namespaces/{self.namespace}/schemas")
-        response.raise_for_status()
         return response.json()
 
     def get_content_tree(self, content_id: str):
@@ -535,7 +528,6 @@ class IndexifyClient:
         response = self.get(
             f"namespaces/{self.namespace}/content/{content_id}/content-tree"
         )
-        response.raise_for_status()
         return response.json()
 
     def get_child_list(self, content_id: str):
@@ -567,7 +559,6 @@ class IndexifyClient:
             json=req,
             headers={"Content-Type": "application/json"},
         )
-        response.raise_for_status()
         result = response.json()
         rows = []
         for row in result["rows"]:
@@ -586,8 +577,19 @@ class IndexifyClient:
             json=req,
             headers={"Content-Type": "application/json"},
         )
-        response.raise_for_status()
         return response.json()
+    
+    def wait_for_extraction(self, content_id: str):
+        """
+        Wait for extraction to complete for a given content id
+
+        Args:
+            - content_id (str): id of content
+        """
+        response = self.get(
+            f"namespaces/{self.namespace}/content/{content_id}/wait"
+        )
+        response.raise_for_status()
 
     def generate_unique_hex_id(self):
         """
@@ -610,3 +612,16 @@ class IndexifyClient:
         """
         hash_object = hashlib.sha256(input_string.encode())
         return hash_object.hexdigest()[:16]
+
+    def __print_additional_error_context(self, error: Error):
+        print(error)
+
+        if error.status == "ExtractionGraphError":
+            graphs = [eg.name for eg in self.extraction_graphs]
+            extractors = [ext.name for ext in self.extractors()]
+            print(f"Available extraction graphs: {graphs}")
+            print(f"Available extractors: {extractors}")
+
+        if error.status == "SearchError":
+            indexes = [index["name"] for index in self.indexes()]
+            print(f"Available indexes: {indexes}")
